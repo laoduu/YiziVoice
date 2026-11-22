@@ -3,6 +3,7 @@ import { Trash2, Sparkles, Loader2, Wand2 } from 'lucide-react'
 import { Textarea } from '../ui/Input'
 import { useToast } from '../Toast'
 import { textGenerate, getApiErrorMessage } from '../../services/mimoApi'
+import { useI18n, type MessageKey } from '../../i18n/react'
 
 export type NlMode = 'paragraph' | 'director'
 
@@ -38,21 +39,23 @@ export function useNaturalLanguageState(): NaturalLanguageState {
   }
 }
 
-const PARAGRAPH_PLACEHOLDER = '描述想要的语气、语速、情绪、年龄感…\n例：用轻快上扬的语调向领导报喜，整体节奏明快，关键数字加重\n也可以输入核心关键字，点击「AI 生成风格描述」'
-const DIRECTOR_PLACEHOLDERS = {
-  role: '谁在说话？身份、年龄、性格、说话习惯，如：沉稳老练、惜字如金的门阀大当家\n也可以输入核心关键字，点击「AI 生成风格描述」',
-  scene: '在哪、和谁、什么情境？越具体越好，如：祠堂议事厅内，列祖列宗牌位之前，家族晚辈环伺\n也可以输入核心关键字，点击「AI 生成风格描述」',
-  direction: '怎么说话？语速、停顿、重音、情绪起伏，如：语气威严但带一丝疲惫，关键处停顿加重\n也可以输入核心关键字，点击「AI 生成风格描述」',
+const PARAGRAPH_PLACEHOLDER_KEY: MessageKey = 'tts.nlParagraphPlaceholder'
+const DIRECTOR_PLACEHOLDER_KEYS: Record<'role' | 'scene' | 'direction', MessageKey> = {
+  role: 'tts.nlRolePlaceholder',
+  scene: 'tts.nlScenePlaceholder',
+  direction: 'tts.nlDirectionPlaceholder',
 }
 
 // —— 示例数据 ——
+// 除 labelKey（界面 chip 文案）外，正文内容是 AI few-shot 载荷与演示填充内容，
+// 保持中文不动：系统 prompt 要求输出中文风格指令，翻译示例会破坏参考语体。
 interface ParagraphExample {
-  label: string
+  labelKey: MessageKey
   paragraph: string
   text: string
 }
 interface DirectorExample {
-  label: string
+  labelKey: MessageKey
   role: string
   scene: string
   direction: string
@@ -61,7 +64,7 @@ interface DirectorExample {
 
 const PARAGRAPH_EXAMPLES: ParagraphExample[] = [
   {
-    label: '考试少年',
+    labelKey: 'tts.exampleExamTeen',
     paragraph: '用轻快上扬的语调向领导报喜，语速稍快，带着查到成绩后压抑不住的激动与小骄傲，声音明亮有活力。\n看着刚解决的难题成果忍不住得意忘形地惊呼，声音高亢明亮，语速偏快，语气中带着满满的自信与难以置信。\n用明亮活泼的青少年嗓音，带着恶作剧得逞后的得意与戏谑，语速偏快且咬字轻巧，在强调赌注时语气微微上扬。',
     text: '嘿嘿，怎么样，我就说我能赢吧，这下你可输定啦！',
   },
@@ -69,14 +72,14 @@ const PARAGRAPH_EXAMPLES: ParagraphExample[] = [
 
 const DIRECTOR_EXAMPLES: DirectorExample[] = [
   {
-    label: '公关总监',
+    labelKey: 'tts.examplePrDirector',
     role: '现代科技企业公关总监，身材圆润相貌平平。用四两拨千斤的幽默把尖锐化为无形。',
     scene: '产品发布会大屏幕突发故障蓝屏，台下百家媒体窃窃私语。她拿着麦克风从后台从容走上舞台。',
     direction: '气息极深胸腔共鸣丰厚，温暖踏实的包裹感。从容不迫中低音，语速适中停顿精准，像喜剧演员抛梗前的留白。咬字圆滑不露锋芒，句末放出一点气声营造亲昵感。声音底色里含着微笑发力的独特共鸣。自我调侃时不慌不忙。',
     text: '大家别慌，大屏幕没坏，它只是被我的颜值震惊得闭上了眼睛。真的，刚才我在后台一探头，它可能觉得屏幕反光照出了我的脸，系统直接触发了最高级别的自我防御机制。不过没关系，既然它罢工了，那就只能由我这个全场长得最安全的人，来给大家讲讲咱们这款新一代安全芯片到底有多靠谱。',
   },
   {
-    label: '骄傲明星',
+    labelKey: 'tts.exampleProudStar',
     role: '27岁跌入谷底但拒不认输的顶级流量女星。极度自恋，行事张扬，表面跋扈实则护短真性情。',
     scene: '独立化妆间，当面撕毁经纪公司送来的带侮辱意味的解约合同，并对门外偷听的狗仔和落井下石的助理喊话。',
     direction: '极具攻击性的都市千金腔。全实声明亮穿透力强。咬字锋利脆快狠。句首起调极高，带居高临下的傲慢，句尾因情绪激动砸下重音（尤其四声），字音切得极干脆。情绪翻书般切换，前一秒咬牙切齿，后一秒理直气壮娇纵。提到食物时语速突然放慢，重音在食物名词上，带贪婪鲜活感。',
@@ -135,13 +138,15 @@ interface DirectorResult { role: string; scene: string; direction: string }
 
 export function NaturalLanguagePanel(p: NaturalLanguageState) {
   const { showToast } = useToast()
+  const { t: tr } = useI18n()
+  const aiLabel = tr('tts.aiGenerate')
 
   // An example fills the style description; it must never silently overwrite script text the
   // user already wrote. Empty → fill it (that is the point of an example). Non-empty → keep
   // the user's text and say so, instead of replacing it without a word.
   const applyExampleText = (exampleText: string) => {
     if (!p.text.trim()) p.setText(exampleText)
-    else showToast('朗读文本已有内容，示例只填入了风格描述')
+    else showToast(tr('tts.exampleKeptScript'))
   }
   const [aiLoading, setAiLoading] = useState(false)
 
@@ -161,7 +166,7 @@ export function NaturalLanguagePanel(p: NaturalLanguageState) {
         if (data && typeof data.paragraph === 'string' && data.paragraph.trim()) {
           p.setNlParagraph(data.paragraph.trim())
         } else {
-          showToast('AI 返回为空,请换个关键字重试')
+          showToast(tr('tts.aiEmptyResult'))
         }
       } else {
         const data = await textGenerate<DirectorResult>({
@@ -177,7 +182,7 @@ export function NaturalLanguagePanel(p: NaturalLanguageState) {
           p.setNlScene(data.scene.trim())
           p.setNlDirection(data.direction.trim())
         } else {
-          showToast('AI 返回字段缺失,请换个关键字重试')
+          showToast(tr('tts.aiMissingFields'))
         }
       }
     } catch (e) {
@@ -192,9 +197,9 @@ export function NaturalLanguagePanel(p: NaturalLanguageState) {
       {/* 方式（自由描述 / 导演演绎）由页面顶部那一排统一选择，这里只渲染该方式的输入区 */}
       <div className="flex items-center gap-2 flex-wrap">
         <div className="flex items-center gap-1.5 min-w-0 flex-1 min-w-0">
-          <span className="text-xs text-ink-3 shrink-0">示例</span>
+          <span className="text-xs text-ink-3 shrink-0">{tr('tts.examples')}</span>
           {p.nlMode === 'paragraph' ? (
-            <ExampleChip label={PARAGRAPH_EXAMPLES[0].label} onClick={() => {
+            <ExampleChip label={tr(PARAGRAPH_EXAMPLES[0].labelKey)} onClick={() => {
               const ex = PARAGRAPH_EXAMPLES[0]
               p.setNlParagraph(ex.paragraph)
               applyExampleText(ex.text)
@@ -202,7 +207,7 @@ export function NaturalLanguagePanel(p: NaturalLanguageState) {
           ) : (
             <div className="flex items-center gap-1.5 flex-wrap">
               {DIRECTOR_EXAMPLES.map(ex => (
-                <ExampleChip key={ex.label} label={ex.label} onClick={() => {
+                <ExampleChip key={ex.labelKey} label={tr(ex.labelKey)} onClick={() => {
                   p.setNlRole(ex.role)
                   p.setNlScene(ex.scene)
                   p.setNlDirection(ex.direction)
@@ -216,7 +221,7 @@ export function NaturalLanguagePanel(p: NaturalLanguageState) {
           type="button"
           onClick={handleAiGenerate}
           disabled={!canAi}
-          title={keyword ? '根据当前输入的关键字生成详细风格指令' : '请先在下方文本框中输入关键字'}
+          title={keyword ? tr('tts.aiReadyTitle') : tr('tts.aiNeedKeywordTitle')}
           className={`inline-flex items-center gap-1 h-[26px] px-2.5 rounded-sm text-sm font-medium border cursor-pointer transition-all whitespace-nowrap ${
             canAi
               ? 'border-accent text-accent hover:bg-accent-soft'
@@ -226,12 +231,12 @@ export function NaturalLanguagePanel(p: NaturalLanguageState) {
           {aiLoading ? (
             <>
               <Loader2 size={14} className="animate-spin" />
-              生成中…
+              {tr('tts.generating')}
             </>
           ) : (
             <>
               <Wand2 size={14} />
-              AI 生成风格描述
+              {aiLabel}
             </>
           )}
         </button>
@@ -243,18 +248,18 @@ export function NaturalLanguagePanel(p: NaturalLanguageState) {
             rows={4}
             value={p.nlParagraph}
             onChange={e => p.setNlParagraph(e.target.value)}
-            placeholder={PARAGRAPH_PLACEHOLDER}
+            placeholder={tr(PARAGRAPH_PLACEHOLDER_KEY, { ai: aiLabel })}
             className="resize-none pr-14 text-sm placeholder:text-xs"
           />
             <div className="absolute bottom-2 right-2 flex items-center gap-2">
               <span className="text-xs text-ink-3 tabular-nums pointer-events-none">
-                {p.nlParagraph.length} 字
+                {tr('tts.charCount', { n: p.nlParagraph.length })}
               </span>
               {p.nlParagraph && (
                 <button
                   type="button"
-                  aria-label="清空风格描述"
-                  title="清空"
+                  aria-label={tr('tts.clearStyleDescription')}
+                  title={tr('common.clear')}
                   onClick={() => p.setNlParagraph('')}
                   className="w-6 h-6 rounded-sm grid place-items-center text-ink-3 hover:text-danger-text hover:bg-danger-soft cursor-pointer transition-colors"
                 >
@@ -266,22 +271,22 @@ export function NaturalLanguagePanel(p: NaturalLanguageState) {
       ) : (
         <div className="space-y-2">
           <DirectorRow
-            label="角色"
+            label={tr('tts.role')}
             value={p.nlRole}
             onChange={p.setNlRole}
-            placeholder={DIRECTOR_PLACEHOLDERS.role}
+            placeholder={tr(DIRECTOR_PLACEHOLDER_KEYS.role, { ai: aiLabel })}
           />
           <DirectorRow
-            label="场景"
+            label={tr('tts.scene')}
             value={p.nlScene}
             onChange={p.setNlScene}
-            placeholder={DIRECTOR_PLACEHOLDERS.scene}
+            placeholder={tr(DIRECTOR_PLACEHOLDER_KEYS.scene, { ai: aiLabel })}
           />
           <DirectorRow
-            label="指导"
+            label={tr('tts.direction')}
             value={p.nlDirection}
             onChange={p.setNlDirection}
-            placeholder={DIRECTOR_PLACEHOLDERS.direction}
+            placeholder={tr(DIRECTOR_PLACEHOLDER_KEYS.direction, { ai: aiLabel })}
           />
         </div>
       )}
@@ -309,6 +314,7 @@ function DirectorRow({
   onChange: (v: string) => void
   placeholder: string
 }) {
+  const { t: tr } = useI18n()
   return (
     <div className="flex items-start gap-2">
       <span
@@ -328,8 +334,8 @@ function DirectorRow({
         {value && (
           <button
             type="button"
-            aria-label={`清空${label}`}
-            title="清空"
+            aria-label={tr('tts.clearField', { name: label })}
+            title={tr('common.clear')}
             onClick={() => onChange('')}
             className="absolute top-1.5 right-1.5 w-6 h-6 rounded-sm grid place-items-center text-ink-3 hover:text-danger-text hover:bg-danger-soft cursor-pointer transition-colors"
           >

@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { Minus, Square, X, Sun, Moon, Settings } from 'lucide-react'
 import { cachedTheme, setTheme, type Theme } from '../services/theme'
+import { useI18n } from '../i18n/react'
 
 // 渲染时读取(勿提升到模块顶层):桌面桥在 boot 中先于渲染注入
 const hasWindowControls = () => !!(window as any).desktopAPI
 
 // 全应用唯一品牌露出点:纯文字字标,克制化规则见 DESIGN.md §7
 export function TitleBar({ onOpenSettings, settingsOpen = false }: { onOpenSettings: () => void; settingsOpen?: boolean }) {
+  const { t: tr } = useI18n()
   const [theme, setThemeState] = useState<Theme>(cachedTheme())
 
   const toggleTheme = () => {
@@ -24,8 +26,8 @@ export function TitleBar({ onOpenSettings, settingsOpen = false }: { onOpenSetti
           type="button"
           className="titlebar-btn"
           onClick={toggleTheme}
-          aria-label={theme === 'light' ? '切换到暗色主题' : '切换到亮色主题'}
-          title={theme === 'light' ? '暗色主题' : '亮色主题'}
+          aria-label={theme === 'light' ? tr('ui.switchToDark') : tr('ui.switchToLight')}
+          title={theme === 'light' ? tr('ui.darkTheme') : tr('ui.lightTheme')}
         >
           {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
         </button>
@@ -36,9 +38,9 @@ export function TitleBar({ onOpenSettings, settingsOpen = false }: { onOpenSetti
           type="button"
           className={`titlebar-btn${settingsOpen ? ' active' : ''}`}
           onClick={onOpenSettings}
-          aria-label={settingsOpen ? '关闭设置中心' : '设置中心'}
+          aria-label={settingsOpen ? tr('ui.settingsHubClose') : tr('ui.settingsHub')}
           aria-pressed={settingsOpen}
-          title={settingsOpen ? '关闭设置中心 (Esc)' : '设置 (Ctrl+,)'}
+          title={settingsOpen ? `${tr('ui.settingsHubClose')} (Esc)` : `${tr('nav.settings')} (Ctrl+,)`}
         >
           <Settings size={16} />
         </button>
@@ -46,13 +48,13 @@ export function TitleBar({ onOpenSettings, settingsOpen = false }: { onOpenSetti
         {hasWindowControls() && (
           <>
             <div className="w-px h-4 bg-line mx-1" />
-            <button className="titlebar-btn" onClick={() => (window as any).desktopAPI.minimize()} aria-label="最小化" title="最小化">
+            <button className="titlebar-btn" onClick={() => (window as any).desktopAPI.minimize()} aria-label={tr('win.minimize')} title={tr('win.minimize')}>
               <Minus size={16} />
             </button>
-            <button className="titlebar-btn" onClick={() => (window as any).desktopAPI.maximize()} aria-label="最大化" title="最大化/还原">
+            <button className="titlebar-btn" onClick={() => (window as any).desktopAPI.maximize()} aria-label={tr('win.maximize')} title={`${tr('win.maximize')}/${tr('win.restore')}`}>
               <Square size={16} />
             </button>
-            <button className="titlebar-btn close" onClick={() => (window as any).desktopAPI.close()} aria-label="关闭" title="关闭">
+            <button className="titlebar-btn close" onClick={() => (window as any).desktopAPI.close()} aria-label={tr('win.close')} title={tr('win.close')}>
               <X size={16} />
             </button>
           </>

@@ -1,16 +1,19 @@
 import { useEffect, useRef } from 'react'
 import { Settings, BookOpen, Info, ArrowLeft } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { Segmented } from '../ui/Segmented'
 import { SettingsPanel } from './SettingsPanel'
 import { TutorialPanel } from './TutorialPanel'
 import { AboutPanel } from './AboutPanel'
+import { useI18n } from '../../i18n/react'
+import type { MessageKey } from '../../i18n/core'
 
 export type HubTab = 'settings' | 'tutorial' | 'about'
 
-const TABS = [
-  { key: 'settings' as const, label: '设置', icon: Settings, desc: '接口密钥、AI 文本模型与数据存储位置' },
-  { key: 'tutorial' as const, label: '教程', icon: BookOpen, desc: '从配置到生成，一步步上手' },
-  { key: 'about' as const, label: '关于', icon: Info, desc: '版本信息与我们的其他产品' },
+const TABS: { key: HubTab; labelKey: MessageKey; descKey: MessageKey; icon: LucideIcon }[] = [
+  { key: 'settings', labelKey: 'nav.settings', descKey: 'settings.tabDesc', icon: Settings },
+  { key: 'tutorial', labelKey: 'nav.tutorial', descKey: 'tutorial.tabDesc', icon: BookOpen },
+  { key: 'about', labelKey: 'nav.about', descKey: 'about.tabDesc', icon: Info },
 ]
 
 interface Props {
@@ -29,6 +32,7 @@ interface Props {
 // 受控页签:由 App 持有(关闭态为 null),入口(Ctrl+, / 标题栏齿轮)可直接指定落在哪个页签,
 // 不需要 open→tab 的同步 effect(StrictMode 挂载期 effect 会跑两次,AGENTS.md 有踩坑记录)
 export function HubPage({ tab, onTabChange, onBack }: Props) {
+  const { t: tr } = useI18n()
   const scrollRef = useRef<HTMLDivElement>(null)
   const active = TABS.find(t => t.key === tab) ?? TABS[0]
 
@@ -46,11 +50,11 @@ export function HubPage({ tab, onTabChange, onBack }: Props) {
         <button
           type="button"
           onClick={onBack}
-          title="返回 (Esc)"
+          title={`${tr('common.back')} (Esc)`}
           className="absolute right-5 top-1/2 -translate-y-1/2 inline-flex items-center gap-1.5 h-7 px-2.5 rounded-sm text-sm text-ink-2 hover:text-ink hover:bg-surface-hover cursor-pointer transition-colors"
         >
           <ArrowLeft size={14} />
-          返回
+          {tr('common.back')}
         </button>
 
         <div className="flex flex-col items-center gap-1.5">
@@ -65,12 +69,12 @@ export function HubPage({ tab, onTabChange, onBack }: Props) {
               label: (
                 <span className="inline-flex items-center gap-1.5">
                   <t.icon size={16} />
-                  {t.label}
+                  {tr(t.labelKey)}
                 </span>
               ),
             }))}
           />
-          <p className="text-xs text-ink-3">{active.desc}</p>
+          <p className="text-xs text-ink-3">{tr(active.descKey)}</p>
         </div>
       </div>
 

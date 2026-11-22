@@ -10,16 +10,17 @@ import { Welcome } from './components/Welcome'
 import { HubPage, type HubTab } from './components/hub/HubPage'
 import { Tooltip } from './components/ui/Tooltip'
 import { ToastProvider } from './components/Toast'
+import { I18nProvider, useI18n, type MessageKey } from './i18n/react'
 import { migrateLegacySettings } from './services/storage'
 import type { TtsHistoryEntry } from './services/historyTypes'
 
 export type Tool = 'home' | 'tts' | 'asr' | 'clone'
 
 // 收起态窄条的工具导航(与左栏菜单一致)
-const COLLAPSED_TOOLS: { tool: Tool; label: string; icon: LucideIcon }[] = [
-  { tool: 'clone', label: '克隆音色', icon: ScanFace },
-  { tool: 'tts', label: '文生音', icon: AudioLines },
-  { tool: 'asr', label: '音转文', icon: Mic },
+const COLLAPSED_TOOLS: { tool: Tool; labelKey: MessageKey; icon: LucideIcon }[] = [
+  { tool: 'clone', labelKey: 'nav.clone', icon: ScanFace },
+  { tool: 'tts', labelKey: 'nav.tts', icon: AudioLines },
+  { tool: 'asr', labelKey: 'nav.asr', icon: Mic },
 ]
 
 interface AppContextShape {
@@ -51,13 +52,18 @@ export function useApp() {
 }
 
 export function PaneToggle({ side, open, onToggle }: { side: 'left' | 'right'; open: boolean; onToggle: () => void }) {
+  const { t: tr } = useI18n()
   const Icon = side === 'left' ? (open ? PanelLeftClose : PanelLeftOpen) : open ? PanelRightClose : PanelRightOpen
+  const toggleKey: MessageKey = side === 'left' ? 'nav.toggleLeft' : 'nav.toggleRight'
+  const paneKey: MessageKey = open
+    ? side === 'left' ? 'nav.collapseLeft' : 'nav.collapseRight'
+    : side === 'left' ? 'nav.expandLeft' : 'nav.expandRight'
   return (
-    <Tooltip label={`${open ? '收起' : '展开'}${side === 'left' ? '左侧栏' : '右侧栏'} (Ctrl+${side === 'left' ? 'L' : 'R'})`} side="bottom" align="end">
+    <Tooltip label={`${tr(paneKey)} (Ctrl+${side === 'left' ? 'L' : 'R'})`} side="bottom" align="end">
       <button
         type="button"
         onClick={onToggle}
-        aria-label={`切换${side === 'left' ? '左' : '右'}侧栏`}
+        aria-label={tr(toggleKey)}
         className="w-7 h-7 rounded-sm grid place-items-center text-ink-3 hover:text-ink hover:bg-surface-hover cursor-pointer transition-colors"
       >
         <Icon size={14} />
@@ -67,6 +73,7 @@ export function PaneToggle({ side, open, onToggle }: { side: 'left' | 'right'; o
 }
 
 function DesktopShell() {
+  const { t: tr } = useI18n()
   const [activeTool, setTool] = useState<Tool>('home')
   const [resetSignal, setResetSignal] = useState(0)
   const pendingTtsEntry = useRef<TtsHistoryEntry | null>(null)
@@ -193,8 +200,8 @@ function DesktopShell() {
                 <button
                   type="button"
                   onClick={() => setLeftOpen(v => !v)}
-                  aria-label="展开左侧栏"
-                  title="展开左侧栏 (Ctrl+L)"
+                  aria-label={tr('nav.expandLeft')}
+                  title={`${tr('nav.expandLeft')} (Ctrl+L)`}
                   className="w-8 h-8 rounded-sm grid place-items-center text-ink-3 hover:text-ink hover:bg-surface-hover cursor-pointer transition-colors"
                 >
                   <PanelLeftOpen size={16} />
@@ -205,8 +212,8 @@ function DesktopShell() {
                       key={n.tool}
                       type="button"
                       onClick={() => selectTool(n.tool)}
-                      title={n.label}
-                      aria-label={n.label}
+                      title={tr(n.labelKey)}
+                      aria-label={tr(n.labelKey)}
                       className={`w-8 h-8 rounded-sm grid place-items-center cursor-pointer transition-colors ${
                         activeTool === n.tool
                           ? 'text-accent bg-surface-active'
@@ -245,8 +252,10 @@ function DesktopShell() {
 
 export default function App() {
   return (
-    <ToastProvider>
-      <DesktopShell />
-    </ToastProvider>
+    <I18nProvider>
+      <ToastProvider>
+        <DesktopShell />
+      </ToastProvider>
+    </I18nProvider>
   )
 }

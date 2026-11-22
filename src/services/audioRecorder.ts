@@ -1,3 +1,5 @@
+import { t } from '../i18n/core'
+
 export interface RecordingResult {
   blob: Blob
   base64: string
@@ -18,22 +20,22 @@ function describeRecorderError(e: unknown): string {
   switch (name) {
     case 'NotAllowedError':
     case 'SecurityError':
-      return '未获得麦克风权限：请在系统设置中允许 YiziVoice 使用麦克风'
+      return t('errors.micPermissionDenied')
     case 'NotFoundError':
     case 'DevicesNotFoundError':
-      return '没有检测到麦克风设备'
+      return t('errors.micNotFound')
     case 'NotReadableError':
     case 'TrackStartError':
-      return '麦克风被其它程序占用，请关闭后重试'
+      return t('errors.micInUse')
     case 'OverconstrainedError':
-      return '麦克风不支持所需的录音参数'
+      return t('errors.micUnsupportedParams')
     case 'NotSupportedError':
-      return '当前系统缺少录音所需的媒体组件'
+      return t('errors.mediaComponentsMissing')
     default:
       break
   }
-  if (e instanceof TypeError) return '当前环境不支持录音，请改用上传文件'
-  return e instanceof Error && e.message ? e.message : '无法开始录音'
+  if (e instanceof TypeError) return t('errors.recordUnsupported')
+  return e instanceof Error && e.message ? e.message : t('errors.recordStartFailed')
 }
 
 // MediaRecorder 支持的容器各平台不同(WebKitGTK 未必支持 webm/opus),
@@ -45,7 +47,7 @@ function pickRecorderMime(): string | undefined {
 
 export async function startRecording(): Promise<MediaStream> {
   if (!navigator.mediaDevices?.getUserMedia) {
-    throw new Error('当前环境不支持录音，请改用上传文件')
+    throw new Error(t('errors.recordUnsupported'))
   }
 
   let stream: MediaStream

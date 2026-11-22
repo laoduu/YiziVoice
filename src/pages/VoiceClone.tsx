@@ -23,9 +23,10 @@ import { AudioPlayer } from '../components/ui/AudioPlayer'
 import { Dialog } from '../components/ui/Dialog'
 import { EmptyState } from '../components/ui/Skeleton'
 import { Tooltip } from '../components/ui/Tooltip'
+import { useI18n } from '../i18n/react'
 
 
-const PREVIEW_TEXT = '你好，这是一段用于试听的示例文本。'
+// Preview text is localized at use sites via tr('clone.previewText').
 
 // AI text prompt for the voicedesign form. It returns both the voice description and
 // a short audition line, because one button filling both is the whole point of the entry.
@@ -134,6 +135,7 @@ export default function VoiceClone() {
   // Read the audition field from the DOM at click time: React state can lag behind an
   // in-progress IME composition, which would make a non-empty field look empty.
   const designTextInputRef = useRef<HTMLInputElement>(null)
+  const { t: tr } = useI18n()
   const [voiceList, setVoiceList] = useState<any>({ voices: [], categories: [] })
   const [timer, setTimer] = useState(0)
   const timerRef = useRef<ReturnType<typeof setInterval>>()
@@ -144,7 +146,7 @@ export default function VoiceClone() {
   const [showModal, setShowModal] = useState(false)
   const [cloning, setCloning] = useState(false)
   const [previewAudio, setPreviewAudio] = useState('')
-  const [previewText, setPreviewText] = useState(PREVIEW_TEXT)
+  const [previewText, setPreviewText] = useState(tr('clone.previewText'))
   const [profileName, setProfileName] = useState('')
   const [profileCategory, setProfileCategory] = useState('')
 
@@ -217,7 +219,7 @@ export default function VoiceClone() {
       try {
         await startRecording()
       } catch (e) {
-        showToast(e instanceof Error ? e.message : '无法开始录音', 'error')
+        showToast(e instanceof Error ? e.message : tr('errors.recordStartFailed'), 'error')
         return
       }
       setRecording(true)
@@ -230,11 +232,11 @@ export default function VoiceClone() {
     if (!file) return
     const validTypes = ['audio/wav', 'audio/mpeg', 'audio/mp3', 'audio/webm', 'audio/ogg', 'audio/flac']
     if (!validTypes.some(t => file.type.includes(t.split('/')[1]))) {
-      showToast('仅支持 WAV、MP3、WebM、OGG、FLAC 格式的音频文件')
+      showToast(tr('clone.unsupportedFormat'))
       return
     }
     if (file.size > 10 * 1024 * 1024) {
-      showToast('文件大小不能超过 10MB')
+      showToast(tr('errors.fileTooLarge', { max: 10 }))
       return
     }
     setRecordingResult(null)
@@ -245,7 +247,7 @@ export default function VoiceClone() {
       const result = await fileToRecordingResult(file)
       setRecordingResult(result)
     } catch {
-      showToast('音频文件解析失败，请确认文件格式正确')
+      showToast(tr('clone.parseFailed'))
     }
   }
 
@@ -256,7 +258,7 @@ export default function VoiceClone() {
     const hadSampleText = (designTextInputRef.current?.value ?? designText).trim().length > 0
     const settings = await loadAppSettings()
     if (!settings.api.apiKeyConfigured) {
-      showToast('请先在设置中配置 API Key')
+      showToast(tr('errors.apiKeyMissing'))
       return
     }
     setDesignAiLoading(true)
@@ -268,7 +270,7 @@ export default function VoiceClone() {
       })
       const description = data?.description?.trim() || ''
       if (!description) {
-        showToast('AI 未返回音色描述，请换个线索重试')
+        showToast(tr('clone.aiEmpty'))
         return
       }
       setDesignDescription(description)
@@ -278,12 +280,12 @@ export default function VoiceClone() {
       if (sampleText) {
         if (!hadSampleText) {
           setDesignText(sampleText)
-          showToast('音色描述与试听文本已生成', 'success')
+          showToast(tr('clone.designGenerated'), 'success')
         } else {
-          showToast('音色描述已更新；试听文本已有内容，已保留', 'info')
+          showToast(tr('clone.descUpdatedTextKept'), 'info')
         }
       } else {
-        showToast('音色描述已更新，AI 未返回试听文本', 'info')
+        showToast(tr('clone.descUpdatedNoText'), 'info')
       }
     } catch (e) {
       showToast(getApiErrorMessage(e))
@@ -297,7 +299,7 @@ export default function VoiceClone() {
     if (!description) return
     const settings = await loadAppSettings()
     if (!settings.api.apiKeyConfigured) {
-      showToast('请先在设置中配置 API Key')
+      showToast(tr('errors.apiKeyMissing'))
       return
     }
     setDesignGenerating(true)
@@ -311,11 +313,11 @@ export default function VoiceClone() {
         optimizePreview: !designText.trim(),
       })
       if (!result) {
-        showToast('音色设计失败，请重试')
+        showToast(tr('clone.designFailed'))
         return
       }
       setDesignAudio(result.audioUrl)
-      setDesignPreviewText(result.finalText || designText.trim() || '自动生成的试听文本')
+      setDesignPreviewText(result.finalText || designText.trim() || tr('clone.autoPreviewText'))
     } catch (e) {
       showToast(getApiErrorMessage(e))
     } finally {
@@ -325,10 +327,10 @@ export default function VoiceClone() {
 
   const handleOpenDesignedSaveModal = () => {
     if (!designAudio) return
-    setPreviewText(designPreviewText || '设计音色样本')
+    setPreviewText(designPreviewText || tr('clone.designSample'))
     setPreviewAudio(designAudio)
     // Designed voices start in their own category; the user can still pick another one.
-    setProfileCategory('设计音色')
+    setProfileCategory(tr('clone.designLabel'))
     setShowModal(true)
   }
 
@@ -342,9 +344,9 @@ export default function VoiceClone() {
     if (profiles.length === 0) return
     const json = exportVoiceProfiles(profiles)
     const date = new Date().toISOString().slice(0, 10)
-    const ok = await downloadFile(json, `YiziVoice_音色库_${date}.json`, 'application/json')
-    if (ok) showToast(`已导出 ${profiles.length} 个音色角色`, 'success')
-    else showToast('导出已取消')
+    const ok = await downloadFile(json, `YiziVoice_${tr('clone.myLibrary')}_${date}.json`, 'application/json')
+    if (ok) showToast(tr('clone.exported', { n: profiles.length }), 'success')
+    else showToast(tr('clone.exportCanceled'))
   }
 
   const handleImport = async (file: File) => {
@@ -352,14 +354,14 @@ export default function VoiceClone() {
       const text = await file.text()
       const newProfiles = importVoiceProfiles(text)
       if (newProfiles.length === 0) {
-        showToast('文件中没有找到音色数据')
+        showToast(tr('clone.noVoiceData'))
         return
       }
       const existingList = await loadVoiceList()
       const existingIds = new Set(existingList.voices.map(v => v.id))
       const actualNew = newProfiles.filter(p => !existingIds.has(p.id))
       if (actualNew.length === 0) {
-        showToast('这些音色已经存在，无需重复导入')
+        showToast(tr('clone.alreadyExist'))
         return
       }
       for (const p of actualNew) {
@@ -367,9 +369,9 @@ export default function VoiceClone() {
       }
       const newList = await loadVoiceList()
       setVoiceList({ ...newList, categories: voiceList.categories })
-      showToast(`成功导入 ${actualNew.length} 个音色角色`)
+      showToast(tr('clone.imported', { n: actualNew.length }))
     } catch (e: any) {
-      showToast('导入失败：' + (e.message || '文件格式无效'))
+      showToast(tr('clone.importFailed', { message: e.message || tr('errors.invalidVoiceFile') }))
     }
   }
 
@@ -377,7 +379,7 @@ export default function VoiceClone() {
     if (!recordingResult) return
     const settings = await loadAppSettings()
     if (!settings.api.apiKeyConfigured) {
-      showToast('请先在设置中配置 API Key')
+      showToast(tr('errors.apiKeyMissing'))
       return
     }
     setCloning(true)
@@ -385,15 +387,15 @@ export default function VoiceClone() {
       const result = await voiceCloneGenerate({
         audioBase64: recordingResult.wavBase64,
         mimeType: 'audio/wav',
-        text: PREVIEW_TEXT,
+        text: tr('clone.previewText'),
       })
       if (result) {
-        setPreviewText(PREVIEW_TEXT)
+        setPreviewText(tr('clone.previewText'))
         setPreviewAudio(result)
         setProfileCategory('')
         setShowModal(true)
       } else {
-        showToast('音色复刻失败，请重试')
+        showToast(tr('clone.cloneFailed'))
       }
     } catch (e) {
       showToast(getApiErrorMessage(e))
@@ -410,7 +412,7 @@ export default function VoiceClone() {
     const profile: VoiceProfile = {
       id: Date.now().toString(),
       name: profileName.trim(),
-      category: profileCategory || '未分类',
+      category: profileCategory || tr('common.uncategorized'),
       audioBase64: sample.base64,
       mimeType: sample.mimeType,
       previewAudioBase64: previewAudio,
@@ -422,7 +424,7 @@ export default function VoiceClone() {
     setProfileCategory('')
     setRecordingResult(null)
     setPreviewAudio('')
-    setPreviewText(PREVIEW_TEXT)
+    setPreviewText(tr('clone.previewText'))
     setDesignOpen(false)
     setDesignDescription('')
     setDesignText('')
@@ -446,7 +448,7 @@ export default function VoiceClone() {
     const name = newCategory.trim()
     if (!name) return
     if (voiceList.categories.includes(name)) {
-      showToast('该分类已存在')
+      showToast(tr('clone.categoryExists'))
       return
     }
     const categories = await saveVoiceCategories([...voiceList.categories, name])
@@ -459,7 +461,7 @@ export default function VoiceClone() {
     const name = modalNewCategory.trim()
     if (!name) return
     if ((voiceList.categories as string[]).includes(name)) {
-      showToast('该分类已存在')
+      showToast(tr('clone.categoryExists'))
       return
     }
     const categories = await saveVoiceCategories([...voiceList.categories, name])
@@ -472,7 +474,7 @@ export default function VoiceClone() {
   const handleDeleteCategory = async () => {
     if (!deleteCategoryName) return
     const categories = await saveVoiceCategories(voiceList.categories.filter((c: string) => c !== deleteCategoryName))
-    const list = await reassignVoiceCategory(deleteCategoryName, '未分类')
+    const list = await reassignVoiceCategory(deleteCategoryName, tr('common.uncategorized'))
     setVoiceList({ ...list, categories })
     setDeleteCategoryName(null)
   }
@@ -525,7 +527,7 @@ export default function VoiceClone() {
     const result = await saveVoice({ ...full, name })
     setVoiceList({ ...result.list, categories: voiceList.categories })
     setRenameTargetId(null)
-    showToast('已修改音色名称')
+    showToast(tr('clone.renamed'))
   }
 
   // 试听：与历史记录同一条逻辑 ——「正在播放」是一个真实状态：播放期间整排操作保持可见
@@ -555,13 +557,13 @@ export default function VoiceClone() {
     try {
       const settings = await loadAppSettings()
       if (!settings.api.apiKeyConfigured) {
-        showToast('请先在设置中配置 API Key')
+        showToast(tr('errors.apiKeyMissing'))
         return
       }
       const result = await voiceCloneGenerate({
         audioBase64: profile.audioBase64,
         mimeType: profile.mimeType,
-        text: PREVIEW_TEXT,
+        text: tr('clone.previewText'),
       })
       if (result) {
         el.src = result
@@ -572,7 +574,7 @@ export default function VoiceClone() {
         }
       }
     } catch {
-      showToast('预览生成失败')
+      showToast(tr('clone.previewFailed'))
     } finally {
       setPreviewLoadingId('')
     }
@@ -580,7 +582,7 @@ export default function VoiceClone() {
 
   const clonedGroups: Record<string, any[]> = {}
   voiceList.voices.forEach((p: any) => {
-    const cat = p.category || '未分类'
+    const cat = p.category || tr('common.uncategorized')
     if (!clonedGroups[cat]) clonedGroups[cat] = []
     clonedGroups[cat].push(p)
   })
@@ -591,9 +593,9 @@ export default function VoiceClone() {
     ...Object.keys(clonedGroups).filter(c => !(voiceList.categories as string[]).includes(c)),
   ]
 
-  const moveCategories = voiceList.categories.includes('未分类')
+  const moveCategories = voiceList.categories.includes(tr('common.uncategorized'))
     ? voiceList.categories
-    : [...voiceList.categories, '未分类']
+    : [...voiceList.categories, tr('common.uncategorized')]
 
   const fmtClock = (sec: number) =>
     `${Math.floor(sec / 60).toString().padStart(2, '0')}:${(sec % 60).toString().padStart(2, '0')}`
@@ -614,8 +616,8 @@ export default function VoiceClone() {
           <div className="flex items-center gap-3 min-w-0">
             <ScanFace size={30} className="text-accent shrink-0" />
             <div className="min-w-0">
-              <h2 className="text-xl font-semibold text-ink tracking-[-0.01em]">克隆音色</h2>
-              <p className="text-sm text-ink-2 mt-0.5">录制或上传语音样本，也可以用文字设计音色</p>
+              <h2 className="text-xl font-semibold text-ink tracking-[-0.01em]">{tr('clone.title')}</h2>
+              <p className="text-sm text-ink-2 mt-0.5">{tr('clone.subtitle')}</p>
             </div>
           </div>
           {!rightOpen && (
@@ -632,7 +634,7 @@ export default function VoiceClone() {
               v2.1 新增第三个同级入口「设计音色」：它不接收音频，点开后在自己的表单里填文字描述，
               生成结果同样落成样本，之后仍走 voiceclone 复用。三个圆钮必须保持同尺寸/同底色/同图标色。 */}
           <div className="mat-card p-4 space-y-4">
-            <span className="text-sm font-medium text-ink-2">提交音色样本</span>
+            <span className="text-sm font-medium text-ink-2">{tr('clone.submitSample')}</span>
 
             <div
               onDragOver={e => { e.preventDefault(); setDragOver(true) }}
@@ -645,12 +647,12 @@ export default function VoiceClone() {
               <div className="flex flex-wrap items-start justify-center gap-6">
                 {/* 录音 */}
                 <div className="flex-1 min-w-0 max-w-40 flex flex-col items-center gap-2">
-                  <Tooltip label={recording ? '停止录音' : '开始录音'}>
+                  <Tooltip label={recording ? tr('clone.recordStop') : tr('clone.recordStart')}>
                     <button
                       type="button"
                       onClick={handleRecord}
                       disabled={designGenerating || designAiLoading}
-                      aria-label={recording ? '停止录音' : '开始录音'}
+                      aria-label={recording ? tr('clone.recordStop') : tr('clone.recordStart')}
                       className={`${ENTRY_DISC} ${recording ? ENTRY_DISC_RECORDING : ENTRY_DISC_IDLE}`}
                     >
                       {/* 录音中换「停止」字形：此时按下去的语义已经变成「停止录音」，
@@ -660,7 +662,7 @@ export default function VoiceClone() {
                     </button>
                   </Tooltip>
                   <p className="text-sm font-medium text-ink tabular-nums">
-                    {recording ? `正在录音 ${fmtClock(timer)}` : recordingResult ? `已录制 ${fmtClock(Math.round(recordingResult.duration))}` : '开始录音'}
+                    {recording ? tr('clone.recording', { time: fmtClock(timer) }) : recordingResult ? tr('clone.recorded', { time: fmtClock(Math.round(recordingResult.duration)) }) : tr('clone.recordStart')}
                   </p>
                   {/* 波形位常驻 24px：录音时它出现，但下面那句说明不跟着跳 */}
                   <div className="h-6 flex items-center gap-1">
@@ -668,7 +670,7 @@ export default function VoiceClone() {
                       <div key={i} className="waveform-bar" style={{ animationDelay: `${i * 0.05}s` }} />
                     ))}
                   </div>
-                  <p className="text-xs text-ink-3 text-center">环境噪声会被一起刻进音色</p>
+                  <p className="text-xs text-ink-3 text-center">{tr('clone.noiseHint')}</p>
                 </div>
 
                 {/* 上传文件 */}
@@ -680,10 +682,10 @@ export default function VoiceClone() {
                     className="hidden"
                     onChange={e => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); e.target.value = '' }}
                   />
-                  <Tooltip label="上传音频文件">
+                  <Tooltip label={tr('clone.uploadLabel')}>
                     <button
                       type="button"
-                      aria-label="上传音频文件"
+                      aria-label={tr('clone.uploadLabel')}
                       disabled={recording || designGenerating || designAiLoading}
                       onClick={() => fileInputRef.current?.click()}
                       className={`${ENTRY_DISC} ${ENTRY_DISC_IDLE}`}
@@ -691,18 +693,18 @@ export default function VoiceClone() {
                       <Upload size={24} />
                     </button>
                   </Tooltip>
-                  <p className="text-sm font-medium text-ink">上传文件</p>
+                  <p className="text-sm font-medium text-ink">{tr('clone.uploadTitle')}</p>
                   {/* 与左列等深，让两句说明落在同一基线 */}
                   <div className="h-6" />
-                  <p className="text-xs text-ink-3 text-center">已有干净录音时更稳</p>
+                  <p className="text-xs text-ink-3 text-center">{tr('clone.uploadHint')}</p>
                 </div>
 
                 {/* 设计音色（voicedesign）：描述 → 生成样本，不用录音 */}
                 <div className="flex-1 min-w-0 max-w-40 flex flex-col items-center gap-2">
-                  <Tooltip label="设计音色">
+                  <Tooltip label={tr('clone.designLabel')}>
                     <button
                       type="button"
-                      aria-label="设计音色"
+                      aria-label={tr('clone.designLabel')}
                       aria-expanded={designOpen}
                       disabled={recording || designGenerating || designAiLoading}
                       onClick={() => setDesignOpen(v => !v)}
@@ -713,15 +715,15 @@ export default function VoiceClone() {
                     </button>
                   </Tooltip>
                   <p className="text-sm font-medium text-ink">
-                    {designGenerating ? '正在设计…' : '设计音色'}
+                    {designGenerating ? tr('clone.designing') : tr('clone.designBtn')}
                   </p>
                   <div className="h-6" />
-                  <p className="text-xs text-ink-3 text-center">用描述生成，不用录音</p>
+                  <p className="text-xs text-ink-3 text-center">{tr('clone.designHint')}</p>
                 </div>
               </div>
 
               <p className="text-xs text-ink-3 text-center mt-4">
-                上传支持 WAV、MP3、WebM、OGG、FLAC，最大 10MB；文件也可以直接拖到这里
+                {tr('clone.dropHint', { max: 10 })}
               </p>
             </div>
 
@@ -730,13 +732,13 @@ export default function VoiceClone() {
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-1.5">
                     <label htmlFor="voice-design-description" className="text-sm font-medium text-ink-2">
-                      音色描述
+                      {tr('clone.designDescLabel')}
                     </label>
                     <button
                       type="button"
                       onClick={handleAiDesignText}
                       disabled={!designDescription.trim() || designAiLoading || designGenerating}
-                      title="根据当前线索生成音色描述；试听文本仅在为空时填入"
+                      title={tr('clone.designAiTitle')}
                       className={`inline-flex items-center gap-1 h-[26px] px-2.5 rounded-sm text-sm font-medium border cursor-pointer transition-all whitespace-nowrap ${
                         designDescription.trim() && !designAiLoading && !designGenerating
                           ? 'border-accent text-accent hover:bg-accent-soft'
@@ -746,12 +748,12 @@ export default function VoiceClone() {
                       {designAiLoading ? (
                         <>
                           <Loader2 size={14} className="animate-spin" />
-                          生成中…
+                          {tr('clone.generating')}
                         </>
                       ) : (
                         <>
                           <Wand2 size={14} />
-                          AI 生成描述与试听文本
+                          {tr('clone.aiGenerate')}
                         </>
                       )}
                     </button>
@@ -760,7 +762,7 @@ export default function VoiceClone() {
                     id="voice-design-description"
                     rows={3}
                     disabled={designGenerating || designAiLoading}
-                    placeholder="三十岁女性，声音温柔清晰，语速略快慢但不生硬，自然生动，适合深夜电台，尾音略微上翘"
+                    placeholder={tr('clone.designDescPlaceholder')}
                     value={designDescription}
                     onChange={e => {
                       setDesignDescription(e.target.value)
@@ -771,14 +773,14 @@ export default function VoiceClone() {
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5 mb-1.5">
-                    <label htmlFor="voice-design-text" className="text-sm font-medium text-ink-2">试听文本</label>
-                    <span className="text-xs text-ink-3">留空则自动生成</span>
+                    <label htmlFor="voice-design-text" className="text-sm font-medium text-ink-2">{tr('clone.designTextLabel')}</label>
+                    <span className="text-xs text-ink-3">{tr('clone.designTextHint')}</span>
                   </div>
                   <Input
                     id="voice-design-text"
                     ref={designTextInputRef}
                     disabled={designGenerating || designAiLoading}
-                    placeholder="要朗读的内容；留空则由模型自动生成一段试听文案"
+                    placeholder={tr('clone.designTextPlaceholder')}
                     value={designText}
                     onChange={e => {
                       setDesignText(e.target.value)
@@ -788,14 +790,14 @@ export default function VoiceClone() {
                   />
                 </div>
                 <div className="flex items-end justify-between gap-3">
-                  <p className="text-xs text-ink-3">描述越具体，生成的声音越接近预期</p>
+                  <p className="text-xs text-ink-3">{tr('clone.designTip')}</p>
                   <Button
                     variant="soft"
                     loading={designGenerating}
                     disabled={!designDescription.trim() || designAiLoading}
                     onClick={handleDesignGenerate}
                   >
-                    {designAudio ? '重新生成试听' : '生成试听'}
+                    {designAudio ? tr('clone.regeneratePreview') : tr('clone.generatePreview')}
                   </Button>
                 </div>
               </div>
@@ -805,13 +807,13 @@ export default function VoiceClone() {
               <div ref={designResultRef} className="space-y-3 pt-1">
                 {designPreviewText && (
                   <p className="text-xs text-ink-3">
-                    朗读文本：<span className="text-ink-2">{designPreviewText}</span>
+                    {tr('clone.previewLabel')}<span className="text-ink-2">{designPreviewText}</span>
                   </p>
                 )}
                 <AudioPlayer src={designAudio} downloadName="yizivoice_designed_sample.wav" />
                 <div className="flex justify-end">
                   <Button variant="primary" onClick={handleOpenDesignedSaveModal}>
-                    确认并保存角色
+                    {tr('clone.confirmSaveRole')}
                   </Button>
                 </div>
               </div>
@@ -822,7 +824,7 @@ export default function VoiceClone() {
                 <AudioPlayer src={`data:audio/wav;base64,${recordingResult.wavBase64}`} downloadName="yizivoice_sample.wav" />
                 <div className="flex justify-end">
                   <Button variant="primary" loading={cloning} onClick={handleOpenSaveModal}>
-                    {cloning ? '正在复刻音色…' : '确认并保存角色'}
+                    {cloning ? tr('clone.cloning') : tr('clone.confirmSaveRole')}
                   </Button>
                 </div>
               </div>
@@ -832,13 +834,13 @@ export default function VoiceClone() {
           {/* 我的音色库 */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-semibold text-ink">我的音色库</h3>
+              <h3 className="text-base font-semibold text-ink">{tr('clone.myLibrary')}</h3>
               <div className="flex items-center gap-2">
                 <Button variant="secondary" size="sm" icon={<Download size={14} />} disabled={voiceList.voices.length === 0} onClick={handleExport}>
-                  导出全部
+                  {tr('clone.exportAll')}
                 </Button>
                 <Button variant="secondary" size="sm" icon={<FolderOpen size={14} />} onClick={() => importFileRef.current?.click()}>
-                  导入
+                  {tr('clone.import')}
                 </Button>
                 <input
                   ref={importFileRef}
@@ -851,7 +853,7 @@ export default function VoiceClone() {
             </div>
 
             {voiceList.voices.length === 0 ? (
-              <EmptyState icon={ScanFace} title="暂无音色角色" hint="录制一段语音样本，创建第一个克隆角色" />
+              <EmptyState icon={ScanFace} title={tr('clone.emptyTitle')} hint={tr('clone.emptyHint')} />
             ) : (
               <div className="space-y-4">
                 {/* 按分类表顺序渲染,空分组占位,移动角色时分组结构保持稳定 */}
@@ -863,7 +865,7 @@ export default function VoiceClone() {
                       {cat} <span className="opacity-60">({items.length})</span>
                     </p>
                     {items.length === 0 ? (
-                      <p className="text-xs text-ink-3 px-0.5 py-1.5">该分组暂无角色</p>
+                      <p className="text-xs text-ink-3 px-0.5 py-1.5">{tr('clone.groupEmpty')}</p>
                     ) : (
                     <div className="grid gap-2.5 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
                       {items.map(p => {
@@ -918,10 +920,10 @@ export default function VoiceClone() {
                                 {new Date(p.createdAt).toLocaleDateString()}
                               </p>
                               <div className={`col-start-1 row-start-1 flex items-center gap-0.5 transition-opacity duration-100 ${actionsCls}`}>
-                                <Tooltip label={isPreviewing ? '停止试听' : '试听播放'}>
+                                <Tooltip label={isPreviewing ? tr('clone.previewStop') : tr('clone.previewPlay')}>
                                   <button
                                     type="button"
-                                    aria-label={isPreviewing ? '停止试听' : '试听播放'}
+                                    aria-label={isPreviewing ? tr('clone.previewStop') : tr('clone.previewPlay')}
                                     disabled={isLoadingPreview}
                                     onClick={async () => {
                                       // 与文生音右栏同源:读取完整角色数据后再预览
@@ -944,10 +946,10 @@ export default function VoiceClone() {
                                     )}
                                   </button>
                                 </Tooltip>
-                                <Tooltip label="修改名称">
+                                <Tooltip label={tr('clone.renameVoice')}>
                                   <button
                                     type="button"
-                                    aria-label="修改名称"
+                                    aria-label={tr('clone.renameVoice')}
                                     onClick={() => handleOpenRename(p.id)}
                                     className="w-6 h-6 shrink-0 rounded-sm grid place-items-center text-ink-3 hover:bg-surface-active hover:text-ink cursor-pointer transition-colors"
                                   >
@@ -957,8 +959,8 @@ export default function VoiceClone() {
                                 <DropdownMenu
                                   variant="ghost"
                                   align="end"
-                                  tooltip="移动分类"
-                                  heading="移动该音色到分类："
+                                  tooltip={tr('clone.moveTo')}
+                                  heading={tr('clone.moveHeading')}
                                   icon={FolderInput}
                                   menuWidth={168}
                                   items={moveCategories.map((c: string) => ({
@@ -967,10 +969,10 @@ export default function VoiceClone() {
                                   }))}
                                   onSelect={key => handleMoveProfile(p.id, key)}
                                 />
-                                <Tooltip label="删除音色">
+                                <Tooltip label={tr('clone.deleteVoice')}>
                                   <button
                                     type="button"
-                                    aria-label="删除"
+                                    aria-label={tr('common.delete')}
                                     onClick={() => setDeleteTargetId(p.id)}
                                     className="w-6 h-6 shrink-0 rounded-sm grid place-items-center text-ink-3 hover:text-danger-text hover:bg-danger-soft cursor-pointer transition-colors"
                                   >
@@ -1002,19 +1004,19 @@ export default function VoiceClone() {
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <section>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-semibold text-ink">分类管理</h3>
+                <h3 className="text-base font-semibold text-ink">{tr('clone.categoryMgmt')}</h3>
                 <PaneToggle side="right" open={rightOpen} onToggle={toggleRight} />
               </div>
               <div className="flex gap-2 mb-3">
                 <Input
                   className="flex-1 min-w-0"
-                  placeholder="输入新分类名称"
+                  placeholder={tr('clone.newCategoryPlaceholder')}
                   value={newCategory}
                   onChange={e => setNewCategory(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') handleAddCategory() }}
                 />
                 <Button variant="primary" size="md" className="shrink-0" icon={<Plus size={14} />} disabled={!newCategory.trim()} onClick={handleAddCategory}>
-                  添加
+                  {tr('clone.add')}
                 </Button>
               </div>
               <div className="space-y-1">
@@ -1031,7 +1033,7 @@ export default function VoiceClone() {
                         if (isRenaming) return
                         if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); scrollToCategory(cat) }
                       }}
-                      title="点击跳转到音色库对应位置"
+                      title={tr('clone.jumpToTitle')}
                       className="group flex items-center gap-2 px-2.5 py-2 rounded-sm hover:bg-surface-hover cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
                     >
                       {isRenaming ? (
@@ -1049,8 +1051,8 @@ export default function VoiceClone() {
                           />
                           <button
                             type="button"
-                            aria-label="确认重命名"
-                            title="确认"
+                            aria-label={tr('clone.renameConfirm')}
+                            title={tr('common.confirm')}
                           onMouseDown={e => e.preventDefault()}
                           onClick={e => { e.stopPropagation(); submitRenameCategory() }}
                           className="w-6 h-6 rounded-full grid place-items-center bg-accent-strong text-accent-on hover:bg-accent-hover cursor-pointer"
@@ -1059,8 +1061,8 @@ export default function VoiceClone() {
                         </button>
                         <button
                           type="button"
-                          aria-label="取消重命名"
-                          title="取消"
+                          aria-label={tr('common.cancel')}
+                          title={tr('common.cancel')}
                           onMouseDown={e => e.preventDefault()}
                           onClick={e => { e.stopPropagation(); cancelRenameCategory() }}
                           className="w-6 h-6 rounded-full grid place-items-center text-ink-3 hover:text-danger-text cursor-pointer"
@@ -1072,22 +1074,22 @@ export default function VoiceClone() {
                       <>
                         <span className="flex-1 text-sm text-ink truncate">{cat}</span>
                         <span className="text-xs text-ink-3">{count}</span>
-                        {cat !== '未分类' && (
+                        {cat !== tr('common.uncategorized') && (
                           <button
                             type="button"
-                            aria-label={`重命名分类 ${cat}`}
-                            title="重命名分类"
+                            aria-label={tr('clone.renameCategory', { name: cat })}
+                            title={tr('clone.renameConfirm')}
                             onClick={e => { e.stopPropagation(); startRenameCategory(cat) }}
                             className="w-6 h-6 rounded-sm grid place-items-center text-ink-3 hover:text-accent hover:bg-accent-soft cursor-pointer transition-all opacity-0 group-hover:opacity-100"
                           >
                             <Pencil size={12} />
                           </button>
                         )}
-                        {cat !== '未分类' && (
+                        {cat !== tr('common.uncategorized') && (
                           <button
                             type="button"
-                            aria-label={`删除分类 ${cat}`}
-                            title="删除分类（角色将移至未分类）"
+                            aria-label={tr('clone.deleteCategory', { name: cat })}
+                            title={tr('clone.deleteCategoryHint')}
                             onClick={e => { e.stopPropagation(); setDeleteCategoryName(cat) }}
                             className="w-6 h-6 rounded-sm grid place-items-center text-ink-3 hover:text-danger-text hover:bg-danger-soft cursor-pointer transition-all opacity-0 group-hover:opacity-100"
                           >
@@ -1101,7 +1103,7 @@ export default function VoiceClone() {
               })}
             </div>
             <p className="text-xs text-ink-3 mt-3 leading-relaxed">
-              删除分类时，分类下的角色会自动移至「未分类」。角色的分类归属也可在卡片菜单中快速调整。
+              {tr('clone.categoryHelp', { uncat: tr('common.uncategorized') })}
             </p>
             </section>
           </div>
@@ -1112,28 +1114,28 @@ export default function VoiceClone() {
       <Dialog
         open={showModal}
         onClose={() => setShowModal(false)}
-        title="保存音色角色"
-        subtitle="试听预览效果，填写角色信息后保存"
+        title={tr('clone.saveDialogTitle')}
+        subtitle={tr('clone.saveDialogSubtitle')}
         width={480}
         footer={
           <>
-            <Button variant="secondary" onClick={() => { setAddingCategoryInModal(false); setModalNewCategory(''); setShowModal(false) }}>取消</Button>
-            <Button variant="primary" disabled={!profileName.trim()} onClick={handleSaveProfile}>保存</Button>
+            <Button variant="secondary" onClick={() => { setAddingCategoryInModal(false); setModalNewCategory(''); setShowModal(false) }}>{tr('common.cancel')}</Button>
+            <Button variant="primary" disabled={!profileName.trim()} onClick={handleSaveProfile}>{tr('common.save')}</Button>
           </>
         }
       >
         <div className="space-y-4">
           <div className="mat-card p-3.5 space-y-2">
-            <p className="text-sm font-medium text-ink-2">音色预览</p>
+            <p className="text-sm font-medium text-ink-2">{tr('clone.previewCard')}</p>
             {previewText && <p className="text-xs text-ink-3 break-words">“{previewText}”</p>}
             {previewAudio && <audio ref={previewAudioRef} src={previewAudio} controls autoPlay className="w-full h-9 mt-1" />}
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink-2 mb-1.5">角色名称</label>
-            <Input placeholder="例如：小明的声音" value={profileName} onChange={e => setProfileName(e.target.value)} autoFocus />
+            <label className="block text-sm font-medium text-ink-2 mb-1.5">{tr('clone.roleName')}</label>
+            <Input placeholder={tr('clone.roleNamePlaceholder')} value={profileName} onChange={e => setProfileName(e.target.value)} autoFocus />
           </div>
           <div>
-            <label className="block text-sm font-medium text-ink-2 mb-2">分类</label>
+            <label className="block text-sm font-medium text-ink-2 mb-2">{tr('clone.category')}</label>
             <div className="flex flex-wrap gap-1.5">
               {(voiceList.categories as string[]).map(cat => (
                 <Chip key={cat} selected={profileCategory === cat} onClick={() => setProfileCategory(cat)}>
@@ -1145,7 +1147,7 @@ export default function VoiceClone() {
                   <input
                     autoFocus
                     className="h-7 px-2.5 rounded-full border border-line bg-surface-2 text-sm text-ink outline-none focus:border-accent w-[110px]"
-                    placeholder="分类名"
+                    placeholder={tr('clone.categoryName')}
                     value={modalNewCategory}
                     onChange={e => setModalNewCategory(e.target.value)}
                     onKeyDown={e => {
@@ -1153,20 +1155,20 @@ export default function VoiceClone() {
                       if (e.key === 'Escape') { setAddingCategoryInModal(false); setModalNewCategory('') }
                     }}
                   />
-                  <Tooltip label="确认添加">
+                  <Tooltip label={tr('clone.confirmAdd')}>
                     <button
                       type="button"
-                      aria-label="确认添加"
+                      aria-label={tr('clone.confirmAdd')}
                       onClick={handleAddCategoryInModal}
                       className="w-6 h-6 rounded-full grid place-items-center bg-accent-strong text-accent-on hover:bg-accent-hover cursor-pointer"
                     >
                       <Check size={12} strokeWidth={3} />
                     </button>
                   </Tooltip>
-                  <Tooltip label="取消">
+                  <Tooltip label={tr('common.cancel')}>
                     <button
                       type="button"
-                      aria-label="取消"
+                      aria-label={tr('common.cancel')}
                       onClick={() => { setAddingCategoryInModal(false); setModalNewCategory('') }}
                       className="w-6 h-6 rounded-full grid place-items-center text-ink-3 hover:text-danger-text cursor-pointer"
                     >
@@ -1181,7 +1183,7 @@ export default function VoiceClone() {
                   className="h-7 px-3 rounded-full text-sm font-medium border border-dashed border-line-strong text-ink-3 hover:text-accent hover:border-accent cursor-pointer inline-flex items-center gap-1 transition-colors"
                 >
                   <Plus size={14} />
-                  新增分类
+                  {tr('clone.addCategory')}
                 </button>
               )}
             </div>
@@ -1193,13 +1195,13 @@ export default function VoiceClone() {
       <Dialog
         open={!!deleteTargetId}
         onClose={() => setDeleteTargetId(null)}
-        title="确认删除"
-        subtitle="确认删除这个音色角色吗？此操作不可恢复。"
+        title={tr('clone.deleteDialogTitle')}
+        subtitle={tr('clone.deleteDialogSubtitle')}
         width={360}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setDeleteTargetId(null)}>取消</Button>
-            <Button variant="danger" onClick={handleDeleteProfile}>确认删除</Button>
+            <Button variant="secondary" onClick={() => setDeleteTargetId(null)}>{tr('common.cancel')}</Button>
+            <Button variant="danger" onClick={handleDeleteProfile}>{tr('clone.deleteDialogTitle')}</Button>
           </>
         }
       />
@@ -1208,17 +1210,17 @@ export default function VoiceClone() {
       <Dialog
         open={!!renameTargetId}
         onClose={() => setRenameTargetId(null)}
-        title="修改名称"
-        subtitle="只改名字，音频样本、预览与分类都保持不变。"
+        title={tr('clone.renameDialogTitle')}
+        subtitle={tr('clone.renameDialogSubtitle')}
         width={380}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setRenameTargetId(null)}>取消</Button>
-            <Button variant="primary" disabled={!renameValue.trim()} onClick={handleRenameProfile}>保存</Button>
+            <Button variant="secondary" onClick={() => setRenameTargetId(null)}>{tr('common.cancel')}</Button>
+            <Button variant="primary" disabled={!renameValue.trim()} onClick={handleRenameProfile}>{tr('common.save')}</Button>
           </>
         }
       >
-        <label className="block text-sm font-medium text-ink-2 mb-1.5">角色名称</label>
+        <label className="block text-sm font-medium text-ink-2 mb-1.5">{tr('clone.roleName')}</label>
         <Input
           value={renameValue}
           onChange={e => setRenameValue(e.target.value)}
@@ -1231,13 +1233,13 @@ export default function VoiceClone() {
       <Dialog
         open={!!deleteCategoryName}
         onClose={() => setDeleteCategoryName(null)}
-        title="确认删除分类"
-        subtitle={`确定删除分类「${deleteCategoryName ?? ''}」吗？该分类下的角色将移至「未分类」。`}
+        title={tr('clone.deleteCategoryTitle')}
+        subtitle={tr('clone.deleteCategorySubtitle', { name: deleteCategoryName ?? '', uncat: tr('common.uncategorized') })}
         width={380}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setDeleteCategoryName(null)}>取消</Button>
-            <Button variant="danger" onClick={handleDeleteCategory}>确认删除</Button>
+            <Button variant="secondary" onClick={() => setDeleteCategoryName(null)}>{tr('common.cancel')}</Button>
+            <Button variant="danger" onClick={handleDeleteCategory}>{tr('clone.deleteCategoryTitle')}</Button>
           </>
         }
       />

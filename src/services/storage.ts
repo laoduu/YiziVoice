@@ -1,4 +1,5 @@
 import { detectRuntime } from './runtime'
+import { t } from '../i18n/core'
 
 export interface ApiSettings {
   apiKey: string
@@ -27,6 +28,8 @@ export interface AppSettings {
   /** Model ID used by every in-app text-generation call (AI style descriptions). */
   textModel?: string
   theme?: 'light' | 'dark'
+  /** UI language; persisted like theme (see i18n/core.ts). */
+  lang?: 'zh-CN' | 'en'
 }
 
 // ========== 迁移函数 ==========
@@ -77,12 +80,12 @@ export function exportVoiceProfiles(profiles: VoiceProfile[]): string {
 export function importVoiceProfiles(jsonStr: string): VoiceProfile[] {
   const data = JSON.parse(jsonStr)
   if (!data.profiles || !Array.isArray(data.profiles)) {
-    throw new Error('无效的音色文件格式')
+    throw new Error(t('errors.invalidVoiceFile'))
   }
   return data.profiles.map((p: any) => ({
     id: `import_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    name: p.name || '未命名音色',
-    category: p.category || '未分类',
+    name: p.name || t('services.unnamedVoice'),
+    category: p.category || t('common.uncategorized'),
     audioBase64: p.audioBase64,
     mimeType: p.mimeType || 'audio/wav',
     description: p.description,
@@ -132,7 +135,7 @@ export async function downloadUrl(url: string, filename: string): Promise<boolea
   if (!api?.exportBinaryFile) return false
   const base64 = dataUrlBase64(url)
   if (!base64) {
-    console.warn('[download] 仅支持 data:<mime>;base64, 形式的地址,收到:', url.slice(0, 48))
+    console.warn(`${t('services.downloadOnlyDataUrl')} ${url.slice(0, 48)}`)
     return false
   }
   const res = await api.exportBinaryFile(base64, filename)

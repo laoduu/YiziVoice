@@ -1,20 +1,22 @@
 import OpenAI from 'openai'
 import { loadAppSettings } from './configService'
+import { t, type MessageKey } from '../i18n/core'
 
-const ERROR_MESSAGES: Record<number, string> = {
-  429: '请求过于频繁，请慢一点',
-  421: '你让我读的内容有点敏感',
-  503: '大模型服务器超载，请稍后重试',
+// Message keys (not resolved strings) so language switches apply at call time.
+const ERROR_MESSAGE_KEYS: Record<number, MessageKey> = {
+  429: 'errors.rateLimited',
+  421: 'errors.contentSensitive',
+  503: 'errors.serverOverloaded',
 }
 
 export function getApiErrorMessage(error: unknown): string {
   if (error instanceof OpenAI.APIError) {
     const status = error.status
-    if (status && ERROR_MESSAGES[status]) {
-      return ERROR_MESSAGES[status]
+    if (status && ERROR_MESSAGE_KEYS[status]) {
+      return t(ERROR_MESSAGE_KEYS[status])
     }
   }
-  return (error as Error).message || '生成失败，请重试'
+  return (error as Error).message || t('errors.generateFailed')
 }
 
 // 只对接小米 MiMo 一家服务,接口地址固定不可配置;CSP connect-src 亦按此收紧为静态白名单。
@@ -90,7 +92,7 @@ export interface AiModelInfo {
 // ASR ids are filtered out: this list feeds the "AI 文本模型" setting only.
 export async function listAiModels(apiKey: string): Promise<AiModelInfo[]> {
   const key = apiKey.trim()
-  if (!key) throw new Error('请先配置 API Key')
+  if (!key) throw new Error(t('errors.apiKeyMissing'))
   const probe = new OpenAI({
     apiKey: key,
     baseURL: MIMO_BASE_URL,
@@ -287,11 +289,11 @@ export async function textGenerate<T = unknown>(params: {
     ...({ thinking: { type: 'disabled' } } as any),
   } as any)
   const content = completion.choices[0]?.message?.content
-  if (!content) throw new Error('模型未返回内容')
+  if (!content) throw new Error(t('errors.modelNoContent'))
   try {
     return JSON.parse(content) as T
   } catch (e) {
-    throw new Error('AI 生成结果解析失败,请重试')
+    throw new Error(t('errors.modelParseFailed'))
   }
 }
 

@@ -4,6 +4,7 @@ import { getOpeningTags, getInlineTags, clearTagCache } from '../services/audioT
 import { saveOpeningTags, saveInlineTags } from '../services/configService'
 import type { AudioTagCategory } from '../services/configTypes'
 import { Tooltip } from './ui/Tooltip'
+import { useI18n } from '../i18n/react'
 
 interface TagPickerPanelProps {
   type: 'opening' | 'inline'
@@ -12,6 +13,7 @@ interface TagPickerPanelProps {
 
 // 标签选择面板(受控展开,内容由父级工具条按钮触发);保留自定义标签增删能力
 export function TagPickerPanel({ type, onInsert }: TagPickerPanelProps) {
+  const { t: tr } = useI18n()
   const [categories, setCategories] = useState<AudioTagCategory[]>([])
   const [addingCategory, setAddingCategory] = useState<string | null>(null)
   const [newTagValue, setNewTagValue] = useState('')
@@ -81,10 +83,10 @@ export function TagPickerPanel({ type, onInsert }: TagPickerPanelProps) {
                 </button>
                 {!cat.builtin && (
                   <span className="absolute -top-1.5 -right-1.5 flex">
-                    <Tooltip label="删除标签">
+                    <Tooltip label={tr('tts.deleteTag')}>
                       <button
                         type="button"
-                        aria-label={`删除标签 ${tag}`}
+                        aria-label={tr('tts.deleteTagNamed', { name: tag })}
                         onClick={() => handleRemoveCustom(cat.name, tag)}
                         className="w-4 h-4 rounded-full bg-danger text-white leading-none grid place-items-center opacity-0 group-hover:opacity-100 group-has-[:focus-visible]:opacity-100 transition-opacity cursor-pointer"
                       >
@@ -99,7 +101,7 @@ export function TagPickerPanel({ type, onInsert }: TagPickerPanelProps) {
               <span className="inline-flex items-center gap-1">
                 <input
                   className="text-sm px-2.5 py-1 rounded-full border border-line bg-surface-2 text-ink outline-none focus:border-accent w-[96px]"
-                  placeholder="新标签"
+                  placeholder={tr('tts.newTagPlaceholder')}
                   value={newTagValue}
                   onChange={e => setNewTagValue(e.target.value)}
                   onKeyDown={e => {
@@ -109,10 +111,10 @@ export function TagPickerPanel({ type, onInsert }: TagPickerPanelProps) {
                   autoFocus
                   onClick={e => e.stopPropagation()}
                 />
-                <Tooltip label="确认添加">
+                <Tooltip label={tr('tts.confirmAdd')}>
                   <button
                     type="button"
-                    aria-label="确认添加"
+                    aria-label={tr('tts.confirmAdd')}
                     className="w-6 h-6 rounded-full grid place-items-center bg-accent-strong text-accent-on hover:bg-accent-hover cursor-pointer"
                     onClick={e => { e.stopPropagation(); handleAddCustom(cat.name) }}
                   >
@@ -123,8 +125,8 @@ export function TagPickerPanel({ type, onInsert }: TagPickerPanelProps) {
             ) : (
               <button
                 type="button"
-                aria-label="添加自定义标签"
-                title="添加自定义标签"
+                aria-label={tr('tts.addCustomTag')}
+                title={tr('tts.addCustomTag')}
                 className="inline-flex items-center justify-center w-6 h-6 rounded-full text-sm cursor-pointer transition-all bg-surface-hover text-accent hover:bg-accent-soft"
                 onClick={e => {
                   e.stopPropagation()

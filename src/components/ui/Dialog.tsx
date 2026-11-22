@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
+import { useI18n } from '../../i18n/react'
 import { Tooltip } from './Tooltip'
 
 interface DialogProps {
@@ -16,6 +17,7 @@ interface DialogProps {
 // M3 弹窗:backdrop + 居中面板;Esc 关闭
 // 注:原先为设置中心加过 header(自定义头部)入口,设置中心改为整页视图后已移除
 export function Dialog({ open, onClose, title, subtitle, children, footer, width = 480 }: DialogProps) {
+  const { t: tr } = useI18n()
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => {
@@ -53,10 +55,10 @@ export function Dialog({ open, onClose, title, subtitle, children, footer, width
         {/* Tooltip 的 wrapper 自己就是定位锚点,所以把 absolute 放在外层 div 上,
             不要放到 button 上 —— 否则 button 会相对 wrapper 定位,wrapper 尺寸为 0 会跑位 */}
         <div className="absolute top-4 right-4">
-          <Tooltip label="关闭" align="end">
+          <Tooltip label={tr('common.close')} align="end">
             <button
               type="button"
-              aria-label="关闭"
+              aria-label={tr('common.close')}
               onClick={onClose}
               className="w-7 h-7 rounded-sm grid place-items-center text-ink-3 hover:bg-surface-hover hover:text-ink cursor-pointer transition-colors"
             >

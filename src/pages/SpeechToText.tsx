@@ -5,6 +5,7 @@ import { startRecording, stopRecording, RecordingResult } from '../services/audi
 import { loadAppSettings } from '../services/configService'
 import { saveAsrEntry, openHistoryFolder, notifyHistoryUpdated } from '../services/historyService'
 import { useApp, PaneToggle } from '../App'
+import { useI18n } from '../i18n/react'
 import { useToast } from '../components/Toast'
 import { Button } from '../components/ui/Button'
 import { Segmented } from '../components/ui/Segmented'
@@ -86,6 +87,7 @@ export default function SpeechToText() {
   const timerRef = useRef<ReturnType<typeof setInterval>>()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { showToast } = useToast()
+  const { t: tr } = useI18n()
 
   // 只在 resetSignal 真正变化时清理:effect 挂载时也会跑一遍,清空会覆盖同一轮挂载中
   // 的还原逻辑(见 AGENTS.md 踩坑)。不能用布尔量,StrictMode 下挂载期 effect 会跑两次。
@@ -113,7 +115,7 @@ export default function SpeechToText() {
       try {
         await startRecording()
       } catch (e) {
-        showToast(e instanceof Error ? e.message : '无法开始录音', 'error')
+        showToast(e instanceof Error ? e.message : tr('errors.recordStartFailed'), 'error')
         return
       }
       setRecording(true)
@@ -126,11 +128,11 @@ export default function SpeechToText() {
     if (!file) return
     const validTypes = ['audio/wav', 'audio/mpeg', 'audio/mp3', 'audio/webm', 'audio/ogg', 'audio/flac']
     if (!validTypes.some(t => file.type.includes(t.split('/')[1]))) {
-      showToast('仅支持 WAV、MP3、WebM、OGG、FLAC 格式')
+      showToast(tr('asr.unsupportedFormat'))
       return
     }
     if (file.size > 10 * 1024 * 1024) {
-      showToast('文件大小不能超过 10MB')
+      showToast(tr('errors.fileTooLarge', { max: 10 }))
       return
     }
     setResult('')
@@ -140,7 +142,7 @@ export default function SpeechToText() {
       const res = await fileToRecordingResult(file)
       setRecordingResult(res)
     } catch {
-      showToast('音频文件解析失败')
+      showToast(tr('asr.audioDecodeFailed'))
     }
   }
 
@@ -149,7 +151,7 @@ export default function SpeechToText() {
     // 与其他页面一致,从文件设置读取密钥(避免历史遗留的存储源错位)
     const settings = await loadAppSettings()
     if (!settings.api.apiKeyConfigured) {
-      showToast('请先在设置中配置 API Key')
+      showToast(tr('asr.apiKeyRequired'))
       return
     }
 
@@ -184,7 +186,7 @@ export default function SpeechToText() {
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(result)
-    showToast('已复制到剪贴板', 'success')
+    showToast(tr('common.copied'), 'success')
   }
 
   return (
@@ -198,8 +200,8 @@ export default function SpeechToText() {
           <div className="flex items-center gap-3 min-w-0">
             <Mic size={30} className="text-accent shrink-0" />
             <div className="min-w-0">
-              <h2 className="text-xl font-semibold text-ink tracking-[-0.01em]">音转文</h2>
-              <p className="text-sm text-ink-2 mt-0.5">录制语音或上传音频，自动转换为文字</p>
+              <h2 className="text-xl font-semibold text-ink tracking-[-0.01em]">{tr('asr.title')}</h2>
+              <p className="text-sm text-ink-2 mt-0.5">{tr('asr.subtitle')}</p>
             </div>
           </div>
           {!rightOpen && (
@@ -214,7 +216,7 @@ export default function SpeechToText() {
               就是上传、点圆钮就是录音，各自付什么代价写在各自下面（12px caption）。
               与音色克隆「提交音色样本」同一套做法、同一份取值（components/ui/entryDisc.ts）。 */}
           <div className="mat-card p-4 space-y-4">
-            <span className="text-sm font-medium text-ink-2">获取音频</span>
+            <span className="text-sm font-medium text-ink-2">{tr('asr.getAudio')}</span>
 
             <div
               onDragOver={e => { e.preventDefault(); setDragOver(true) }}
@@ -227,11 +229,11 @@ export default function SpeechToText() {
               <div className="flex items-start justify-center gap-16">
                 {/* 录音 */}
                 <div className="w-40 flex flex-col items-center gap-2">
-                  <Tooltip label={recording ? '停止录音' : '开始录音'}>
+                  <Tooltip label={recording ? tr('asr.stopRecording') : tr('asr.startRecording')}>
                     <button
                       type="button"
                       onClick={handleRecord}
-                      aria-label={recording ? '停止录音' : '开始录音'}
+                      aria-label={recording ? tr('asr.stopRecording') : tr('asr.startRecording')}
                       className={`${ENTRY_DISC} ${recording ? ENTRY_DISC_RECORDING : ENTRY_DISC_IDLE}`}
                     >
                       {/* 录音中换「停止」字形：此时按下去的语义已经变成「停止录音」，
@@ -240,7 +242,7 @@ export default function SpeechToText() {
                     </button>
                   </Tooltip>
                   <p className="text-sm font-medium text-ink tabular-nums">
-                    {recording ? `正在录音 ${fmtClock(timer)}` : recordingResult ? `已录制 ${fmtClock(Math.round(recordingResult.duration))}` : '开始录音'}
+                    {recording ? tr('asr.recordingWithTime', { time: fmtClock(timer) }) : recordingResult ? tr('asr.recordedWithTime', { time: fmtClock(Math.round(recordingResult.duration)) }) : tr('asr.startRecording')}
                   </p>
                   {/* 波形位常驻 24px：录音时它出现，但下面那句说明不跟着跳 */}
                   <div className="h-6 flex items-center gap-1">
@@ -248,7 +250,7 @@ export default function SpeechToText() {
                       <div key={i} className="waveform-bar" style={{ animationDelay: `${i * 0.05}s` }} />
                     ))}
                   </div>
-                  <p className="text-xs text-ink-3 text-center">用麦克风现录，首次使用需授权</p>
+                  <p className="text-xs text-ink-3 text-center">{tr('asr.micHint')}</p>
                 </div>
 
                 {/* 上传文件 */}
@@ -260,10 +262,10 @@ export default function SpeechToText() {
                     className="hidden"
                     onChange={e => { const f = e.target.files?.[0]; if (f) handleFileSelect(f); e.target.value = '' }}
                   />
-                  <Tooltip label="上传音频文件">
+                  <Tooltip label={tr('asr.uploadAudioFile')}>
                     <button
                       type="button"
-                      aria-label="上传音频文件"
+                      aria-label={tr('asr.uploadAudioFile')}
                       disabled={recording}
                       onClick={() => fileInputRef.current?.click()}
                       className={`${ENTRY_DISC} ${ENTRY_DISC_IDLE}`}
@@ -271,15 +273,15 @@ export default function SpeechToText() {
                       <Upload size={24} />
                     </button>
                   </Tooltip>
-                  <p className="text-sm font-medium text-ink">上传文件</p>
+                  <p className="text-sm font-medium text-ink">{tr('asr.uploadFile')}</p>
                   {/* 与左列等深，让两句说明落在同一基线 */}
                   <div className="h-6" />
-                  <p className="text-xs text-ink-3 text-center">已有音频文件时更省事</p>
+                  <p className="text-xs text-ink-3 text-center">{tr('asr.uploadHint')}</p>
                 </div>
               </div>
 
               <p className="text-xs text-ink-3 text-center mt-4">
-                支持 WAV、MP3、WebM、OGG、FLAC，最大 10MB；文件也可以直接拖到这里
+                {tr('asr.dropHint', { max: 10 })}
               </p>
             </div>
 
@@ -288,7 +290,7 @@ export default function SpeechToText() {
                 <AudioPlayer src={`data:audio/wav;base64,${recordingResult.wavBase64}`} downloadName="yizivoice_record.wav" />
                 <div className="flex justify-end">
                   <Button variant="primary" loading={loading} onClick={handleTranscribe}>
-                    {loading ? '识别中…' : '开始识别'}
+                    {loading ? tr('asr.transcribing') : tr('asr.transcribe')}
                   </Button>
                 </div>
               </div>
@@ -299,10 +301,10 @@ export default function SpeechToText() {
             <div className="mat-card mat-clip">
               <div className="px-4 py-2.5 border-b border-line flex items-center justify-between">
                 <span className="inline-flex items-center gap-1.5 text-sm font-medium text-ink-2">
-                  <FileText size={14} />识别结果
+                  <FileText size={14} />{tr('asr.resultTitle')}
                 </span>
                 <Button variant="ghost" size="sm" icon={<Copy size={14} />} onClick={handleCopy}>
-                  复制
+                  {tr('common.copy')}
                 </Button>
               </div>
               <div className="p-4">
@@ -310,7 +312,7 @@ export default function SpeechToText() {
               </div>
               <div className="px-4 py-2.5 border-t border-line">
                 <Button variant="ghost" size="sm" icon={<FolderOpen size={14} />} onClick={() => openHistoryFolder()}>
-                  打开所在文件夹
+                  {tr('asr.openFolder')}
                 </Button>
               </div>
             </div>
@@ -324,22 +326,22 @@ export default function SpeechToText() {
           <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <section>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-semibold text-ink">转写设置</h3>
+                <h3 className="text-base font-semibold text-ink">{tr('asr.settingsTitle')}</h3>
                 <PaneToggle side="right" open={rightOpen} onToggle={toggleRight} />
               </div>
-              <label className="block text-sm font-medium text-ink-2 mb-2">识别语种</label>
+              <label className="block text-sm font-medium text-ink-2 mb-2">{tr('asr.langLabel')}</label>
               <Segmented
                 full
                 value={language}
                 onChange={setLanguage}
                 options={[
-                  { value: 'auto', label: '自动检测' },
-                  { value: 'zh', label: '中文' },
-                  { value: 'en', label: '英文' },
+                  { value: 'auto', label: tr('asr.langAuto') },
+                  { value: 'zh', label: tr('asr.langZh') },
+                  { value: 'en', label: tr('asr.langEn') },
                 ]}
               />
               <p className="text-xs text-ink-3 mt-3 leading-relaxed">
-                录音使用浏览器麦克风能力，首次使用需授权。转写完成后可在左栏历史记录中回看。
+                {tr('asr.settingsHint')}
               </p>
             </section>
           </div>

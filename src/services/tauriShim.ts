@@ -1,3 +1,5 @@
+import { t } from '../i18n/core'
+
 // 桌面桥:把 Rust 命令包装成 window.desktopAPI 供前端调用。
 // 必须在渲染前安装(见 main.tsx boot),且禁止在模块顶层读取 window.desktopAPI。
 
@@ -132,7 +134,7 @@ export async function installTauriBridge(): Promise<void> {
         const selected = await openDialog({
           directory: true,
           multiple: false,
-          title: '选择数据存储目录',
+          title: t('services.selectDataDir'),
           defaultPath,
         })
         return typeof selected === 'string' ? selected : null

@@ -14,15 +14,16 @@ import { Tooltip } from './ui/Tooltip'
 import { EmptyState } from './ui/Skeleton'
 import type { Tool } from '../App'
 import { PaneToggle } from '../App'
+import { useI18n, type MessageKey } from '../i18n/react'
 import type { LucideIcon } from 'lucide-react'
 
 type TabType = 'all' | 'tts' | 'asr'
 
 // 功能菜单顺序(与快捷键 Ctrl+1/2/3 一致)
-const TOOL_NAV: { tool: Tool; label: string; icon: LucideIcon }[] = [
-  { tool: 'clone', label: '克隆音色', icon: ScanFace },
-  { tool: 'tts', label: '文生音', icon: AudioLines },
-  { tool: 'asr', label: '音转文', icon: Mic },
+const TOOL_NAV: { tool: Tool; labelKey: MessageKey; icon: LucideIcon }[] = [
+  { tool: 'clone', labelKey: 'nav.clone', icon: ScanFace },
+  { tool: 'tts', labelKey: 'nav.tts', icon: AudioLines },
+  { tool: 'asr', labelKey: 'nav.asr', icon: Mic },
 ]
 
 interface LeftPaneProps {
@@ -36,6 +37,7 @@ interface LeftPaneProps {
 // 左侧栏:新建 + 功能菜单 + 历史常驻列表
 // (设置/教程/关于已上移到标题栏的设置中心,不再占用底部)
 export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, onToggleLeft }: LeftPaneProps) {
+  const { t: tr } = useI18n()
   const [entries, setEntries] = useState<HistoryEntry[]>([])
   const [tab, setTab] = useState<TabType>('all')
   const [query, setQuery] = useState('')
@@ -69,7 +71,7 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
     try {
       const src = await getHistoryAudioSrc(entry)
       if (!src) {
-        showToast('音频文件不存在', 'error')
+        showToast(tr('history.audioMissing'), 'error')
         return
       }
       if (audioRef.current) {
@@ -77,19 +79,19 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
         releaseAudioSrc(audioRef.current.src)
         audioRef.current.src = src
         void audioRef.current.play().catch(() => {
-          showToast('音频播放失败，请尝试下载后播放', 'error')
+          showToast(tr('ui.playFailed'), 'error')
           setPlaying(null)
         })
         setPlaying(entry.id)
       }
     } catch (e) {
-      showToast(e instanceof Error ? e.message : '音频加载失败', 'error')
+      showToast(e instanceof Error ? e.message : tr('history.audioLoadFailed'), 'error')
     }
   }
 
   const handleCopy = async (text: string) => {
     await navigator.clipboard.writeText(text)
-    showToast('已复制到剪贴板', 'success')
+    showToast(tr('common.copied'), 'success')
   }
 
   const handleDownload = async (entry: HistoryEntry) => {
@@ -101,7 +103,7 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
   const handlePruneOrphans = async () => {
     const r = await pruneOrphanAudio(true)
     if (r.error) { showToast(r.error, 'error'); return }
-    if (r.removed === 0) { showToast('没有发现孤儿音频', 'info'); return }
+    if (r.removed === 0) { showToast(tr('history.noOrphanAudio'), 'info'); return }
     setPruneCount(r.removed)
   }
 
@@ -109,7 +111,7 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
     setPruneCount(null)
     const r = await pruneOrphanAudio(false)
     if (r.error) { showToast(r.error, 'error'); return }
-    showToast(`已清理 ${r.removed} 个孤儿音频`, 'success')
+    showToast(tr('history.pruneDone', { count: r.removed }), 'success')
   }
 
   const handleDeleteConfirm = async () => {
@@ -117,13 +119,13 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
     await deleteHistoryEntry(deleteConfirmId)
     setDeleteConfirmId(null)
     await refresh()
-    showToast('已删除', 'info')
+    showToast(tr('history.deleted'), 'info')
   }
 
   const handleClearAll = async () => {
     await clearAllHistory()
     await refresh()
-    showToast('已清空历史记录', 'info')
+    showToast(tr('history.clearedAll'), 'info')
   }
 
   const filtered = entries.filter(e => {
@@ -136,10 +138,10 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
   const ttsCount = entries.filter(e => e.type === 'tts').length
   const asrCount = entries.filter(e => e.type === 'asr').length
 
-  const TABS: { key: TabType; label: string; icon: LucideIcon; count: number }[] = [
-    { key: 'all', label: '全部', icon: Clock, count: entries.length },
-    { key: 'tts', label: '文生音', icon: AudioLines, count: ttsCount },
-    { key: 'asr', label: '音转文', icon: Mic, count: asrCount },
+  const TABS: { key: TabType; labelKey: MessageKey; icon: LucideIcon; count: number }[] = [
+    { key: 'all', labelKey: 'history.tabAll', icon: Clock, count: entries.length },
+    { key: 'tts', labelKey: 'nav.tts', icon: AudioLines, count: ttsCount },
+    { key: 'asr', labelKey: 'nav.asr', icon: Mic, count: asrCount },
   ]
 
   return (
@@ -154,7 +156,7 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
           className="flex-1 min-w-0 flex items-center gap-2.5 h-11 px-2.5 rounded-sm text-base font-medium text-ink cursor-pointer transition-colors duration-100 ease-out hover:bg-surface-hover"
         >
           <Plus size={16} />
-          新建生成
+          {tr('nav.newSession')}
         </button>
         <PaneToggle side="left" open={true} onToggle={onToggleLeft} />
       </div>
@@ -173,7 +175,7 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
             }`}
           >
             <n.icon size={16} />
-            {n.label}
+            {tr(n.labelKey)}
           </button>
         ))}
       </nav>
@@ -184,7 +186,7 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-3 pointer-events-none" />
           <Input
             id="history-search"
-            placeholder="搜索历史记录…"
+            placeholder={tr('history.searchPlaceholder')}
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="pl-8 h-[30px] text-sm"
@@ -199,7 +201,7 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
             key={t.key}
             type="button"
             onClick={() => setTab(t.key)}
-            title={`${t.label} (${t.count})`}
+            title={`${tr(t.labelKey)} (${t.count})`}
             className={`flex-1 h-[26px] rounded-sm inline-flex items-center justify-center gap-1 text-sm font-medium cursor-pointer transition-all duration-100 ease-out ${
               tab === t.key ? 'bg-surface-active text-accent' : 'text-ink-2 hover:bg-surface-hover hover:text-ink'
             }`}
@@ -211,12 +213,12 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
         <DropdownMenu
           variant="ghost"
           align="end"
-          tooltip="更多操作"
+          tooltip={tr('history.moreActions')}
           icon={MoreHorizontal}
           items={[
-            { key: 'folder', label: '打开文件夹', icon: FolderOpen },
-            { key: 'prune', label: '清理孤儿音频', icon: Eraser },
-            { key: 'clear', label: '清空全部记录', icon: Trash2, danger: true },
+            { key: 'folder', label: tr('history.openFolder'), icon: FolderOpen },
+            { key: 'prune', label: tr('history.pruneOrphans'), icon: Eraser },
+            { key: 'clear', label: tr('history.clearAll'), icon: Trash2, danger: true },
           ]}
           onSelect={key => {
             if (key === 'folder') openHistoryFolder()
@@ -229,7 +231,7 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
       {/* 历史流 */}
       <div className="flex-1 overflow-y-auto px-2 pb-2 min-h-0">
         {filtered.length === 0 ? (
-          <EmptyState icon={Clock} title="暂无记录" hint="生成的内容会自动保存在这里" />
+          <EmptyState icon={Clock} title={tr('history.emptyTitle')} hint={tr('history.emptyHint')} />
         ) : (
           filtered.map(entry => {
             const isTts = entry.type === 'tts'
@@ -261,7 +263,7 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
                     }`}
                   >
                     {isTts ? <AudioLines size={12} /> : <Mic size={12} />}
-                    {isTts ? '文生音' : '音转文'}
+                    {isTts ? tr('nav.tts') : tr('nav.asr')}
                   </span>
                   {isTts && (
                     <span className="text-xs px-1.5 py-px rounded-full bg-accent-2-soft text-accent-2-text truncate max-w-[90px]">
@@ -281,10 +283,10 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
 
                 <div className="flex items-center gap-0.5 -ml-1">
                   {hasAudio && (
-                    <Tooltip label={isPlaying ? '暂停' : '播放'}>
+                    <Tooltip label={isPlaying ? tr('common.pause') : tr('common.play')}>
                       <button
                         type="button"
-                        aria-label={isPlaying ? '暂停' : '播放'}
+                        aria-label={isPlaying ? tr('common.pause') : tr('common.play')}
                         onClick={e => { e.stopPropagation(); void handlePlay(entry) }}
                         className={`w-6 h-6 rounded-sm grid place-items-center cursor-pointer transition-all duration-100 ${actionReveal} ${
                           isPlaying ? 'bg-accent-strong text-accent-on' : 'text-ink-3 hover:bg-surface-active hover:text-accent'
@@ -294,10 +296,10 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
                       </button>
                     </Tooltip>
                   )}
-                  <Tooltip label="复制文本">
+                  <Tooltip label={tr('history.copyText')}>
                     <button
                       type="button"
-                      aria-label="复制文本"
+                      aria-label={tr('history.copyText')}
                       onClick={e => { e.stopPropagation(); handleCopy(isTts ? (entry as TtsHistoryEntry).text : (entry as AsrHistoryEntry).text) }}
                       className={`w-6 h-6 rounded-sm grid place-items-center text-ink-3 hover:bg-surface-active hover:text-ink cursor-pointer transition-all duration-100 ${actionReveal}`}
                     >
@@ -305,10 +307,10 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
                     </button>
                   </Tooltip>
                   {isTts && (
-                    <Tooltip label="还原任务">
+                    <Tooltip label={tr('history.restoreTask')}>
                       <button
                         type="button"
-                        aria-label="还原任务"
+                        aria-label={tr('history.restoreTask')}
                         onClick={e => { e.stopPropagation(); onLoadTts(entry as TtsHistoryEntry) }}
                         className={`w-6 h-6 rounded-sm grid place-items-center text-ink-3 hover:bg-surface-active hover:text-accent cursor-pointer transition-all duration-100 ${actionReveal}`}
                       >
@@ -317,10 +319,10 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
                     </Tooltip>
                   )}
                   {hasAudio && (
-                    <Tooltip label="下载音频">
+                    <Tooltip label={tr('common.downloadAudio')}>
                       <button
                         type="button"
-                        aria-label="下载音频"
+                        aria-label={tr('common.downloadAudio')}
                         onClick={e => { e.stopPropagation(); void handleDownload(entry) }}
                         className={`w-6 h-6 rounded-sm grid place-items-center text-ink-3 hover:bg-surface-active hover:text-accent cursor-pointer transition-all duration-100 ${actionReveal}`}
                       >
@@ -329,10 +331,10 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
                     </Tooltip>
                   )}
                   <span className="flex-1" />
-                  <Tooltip label="删除">
+                  <Tooltip label={tr('common.delete')}>
                     <button
                       type="button"
-                      aria-label="删除"
+                      aria-label={tr('common.delete')}
                       onClick={e => { e.stopPropagation(); setDeleteConfirmId(entry.id) }}
                       className={`w-6 h-6 rounded-sm grid place-items-center text-ink-3 hover:text-danger-text hover:bg-danger-soft cursor-pointer transition-all duration-100 ${actionReveal}`}
                     >
@@ -350,13 +352,13 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
       <Dialog
         open={!!deleteConfirmId}
         onClose={() => setDeleteConfirmId(null)}
-        title="确认删除"
-        subtitle="确认删除这条记录吗？将同时删除已生成的音频文件，此操作不可恢复。"
+        title={tr('history.deleteConfirm')}
+        subtitle={tr('history.deleteBody')}
         width={360}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setDeleteConfirmId(null)}>取消</Button>
-            <Button variant="danger" onClick={handleDeleteConfirm}>确认删除</Button>
+            <Button variant="secondary" onClick={() => setDeleteConfirmId(null)}>{tr('common.cancel')}</Button>
+            <Button variant="danger" onClick={handleDeleteConfirm}>{tr('history.deleteConfirm')}</Button>
           </>
         }
       />
@@ -364,13 +366,13 @@ export function LeftPane({ activeTool, onSelectTool, onNewSession, onLoadTts, on
       <Dialog
         open={pruneCount !== null}
         onClose={() => setPruneCount(null)}
-        title="清理孤儿音频"
-        subtitle={`发现 ${pruneCount ?? 0} 个音频文件已不对应任何历史记录，确认删除吗？此操作不可恢复。`}
+        title={tr('history.pruneOrphans')}
+        subtitle={tr('history.pruneBody', { count: pruneCount ?? 0 })}
         width={360}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setPruneCount(null)}>取消</Button>
-            <Button variant="danger" onClick={handlePruneConfirm}>确认清理</Button>
+            <Button variant="secondary" onClick={() => setPruneCount(null)}>{tr('common.cancel')}</Button>
+            <Button variant="danger" onClick={handlePruneConfirm}>{tr('history.pruneAction')}</Button>
           </>
         }
       />

@@ -7,6 +7,20 @@
 
 ## [2.1.4] - 开发中
 
+### 新增:界面多语言（自建 i18n，中英双语）
+
+- 新增 `src/i18n/` 轻量本地化层（无第三方依赖）：`core.ts`（翻译/持久化）+ `react.tsx`
+  （`useI18n()`）+ `locales/zh-CN|en/` 分域词典（common/tts/clone/asr/settings/tutorial/
+  about/history/ui/errors/services 11 域）。zh-CN 为键源，`t(key, vars)` 支持 `{name}` 插值；
+  en 与 zh 键集经脚本核对完全一致（各 454 键），占位符两侧对齐。
+- **设置页新增「界面语言」选项**（位于接口密钥上方）：简体中文 / English 分段切换，即时生效，
+  持久化到 `settings.lang` + localStorage（与 theme 同模式，首帧无闪烁）。
+- 全应用用户可见文案（按钮/提示/占位符/对话框/Toast/空态/教程/关于）已键化；
+  注释保留中文。以下**刻意不译**：AI 提示词载荷（voicedesign/NL prompt）、导演模式 wire
+  format（`角色：`/`场景：`/`指导：` 前缀，历史 schema 契约）、PRESET_VOICES 数据字段
+  （音色名/`lang: '中文'` 比较键）、产品名（YiziVoice/MiMo/一路狂标等）。
+- 同步修正 `design:check` 词汇轮播词数检测（兼容键化后的 `key:` 形态）。
+
 ### 文档:README 重写与架构动图
 
 - README / README.en 借鉴 YiziMarkdown 的写法重写：品牌色 SVG 动图（`assets/readme/workflow.svg`）

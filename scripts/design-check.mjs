@@ -518,7 +518,9 @@ const reelBlock = (welcome.match(/const REEL_WORDS[^=]*=\s*\[([\s\S]*?)\n\]/) ||
 if (!reelBlock) {
   fail('词汇轮播:找不到 REEL_WORDS 定义(改了结构就要同步这条检查)')
 } else {
-  const words = (reelBlock.match(/text:\s*'/g) || []).length
+  // v2.1.4 起 REEL_WORDS 存 MessageKey(key:)而非字面量(text:)——两种形态都认,
+  // 迁移前后这条检查都有效。
+  const words = Math.max((reelBlock.match(/key:\s*'/g) || []).length, (reelBlock.match(/text:\s*'/g) || []).length)
   const hues = [...reelBlock.matchAll(/text-hero-(\d+)/g)].map(m => Number(m[1]))
   if (words !== hues.length) fail(`词汇轮播:${words} 个词但只接了 ${hues.length} 个配色(text-hero-*)`)
   const strict = [...hues].sort((a, b) => a - b)

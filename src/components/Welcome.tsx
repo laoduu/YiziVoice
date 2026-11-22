@@ -2,11 +2,12 @@ import { useEffect, useState } from 'react'
 import { AudioLines, Mic, ScanFace } from 'lucide-react'
 import type { Tool } from '../App'
 import { WordReel, type ReelWord } from './ui/WordReel'
+import { useI18n, type MessageKey } from '../i18n/react'
 
-const ACTIONS: { tool: Tool; label: string; desc: string; icon: typeof Mic }[] = [
-  { tool: 'clone', label: '克隆音色', desc: '复刻你的专属声音', icon: ScanFace },
-  { tool: 'tts', label: '文生音', desc: '输入文案，生成语音', icon: AudioLines },
-  { tool: 'asr', label: '音转文', desc: '录音上传，转为文字', icon: Mic },
+const ACTIONS: { tool: Tool; labelKey: MessageKey; descKey: MessageKey; icon: typeof Mic }[] = [
+  { tool: 'clone', labelKey: 'nav.clone', descKey: 'ui.welcomeCloneDesc', icon: ScanFace },
+  { tool: 'tts', labelKey: 'nav.tts', descKey: 'ui.welcomeTtsDesc', icon: AudioLines },
+  { tool: 'asr', labelKey: 'nav.asr', descKey: 'ui.welcomeAsrDesc', icon: Mic },
 ]
 
 // The hero cycles through seven capabilities, one hue each. Order matters: it reads
@@ -15,14 +16,14 @@ const ACTIONS: { tool: Tool; label: string; desc: string; icon: typeof Mic }[] =
 // The hue ASSIGNMENT is also ordered on purpose: neighbours are permuted to maximise
 // the worst-case colour difference, so each flip reads as a change and not as a step
 // along a gradient. Do not "tidy" this back into hue order - see DESIGN.md 5.10-一.
-const REEL_WORDS: ReelWord[] = [
-  { text: '创造', className: 'text-hero-1' },
-  { text: '克隆', className: 'text-hero-2' },
-  { text: '生成', className: 'text-hero-3' },
-  { text: '演绎', className: 'text-hero-4' },
-  { text: '朗诵', className: 'text-hero-5' },
-  { text: '识别', className: 'text-hero-6' },
-  { text: '模仿', className: 'text-hero-7' },
+const REEL_WORDS: { key: MessageKey; className: string }[] = [
+  { key: 'ui.reelCreate', className: 'text-hero-1' },
+  { key: 'ui.reelClone', className: 'text-hero-2' },
+  { key: 'ui.reelGenerate', className: 'text-hero-3' },
+  { key: 'ui.reelPerform', className: 'text-hero-4' },
+  { key: 'ui.reelRecite', className: 'text-hero-5' },
+  { key: 'ui.reelRecognize', className: 'text-hero-6' },
+  { key: 'ui.reelImitate', className: 'text-hero-7' },
 ]
 
 const REEL_INTERVAL_MS = 2000
@@ -42,6 +43,7 @@ function usePrefersReducedMotion() {
 
 // 欢迎页(豆包式):居中欢迎语 + 三个功能入口,可横向滑动
 export function Welcome({ onSelect }: { onSelect: (t: Tool) => void }) {
+  const { t: tr } = useI18n()
   const still = usePrefersReducedMotion()
   const [reelIndex, setReelIndex] = useState(0)
   const [reelInstant, setReelInstant] = useState(false)
@@ -84,25 +86,25 @@ export function Welcome({ onSelect }: { onSelect: (t: Tool) => void }) {
 
   // The reel is aria-hidden, so the heading carries the sentence as its accessible
   // name. Without this a screen reader would announce all seven words in a row.
-  const currentWord = REEL_WORDS[reelIndex % REEL_WORDS.length].text
+  const currentWord = tr(REEL_WORDS[reelIndex % REEL_WORDS.length].key)
 
   return (
     <div className="mat-panel h-full flex flex-col items-center justify-center gap-10 mat-clip">
       <div className="text-center px-6">
         <h1
           className="text-3xl font-semibold text-ink tracking-[-0.01em]"
-          aria-label={`今天想${currentWord}什么声音？`}
+          aria-label={tr('ui.welcomeHeroAria', { word: currentWord })}
         >
-          <span aria-hidden="true">今天想</span>
+          <span aria-hidden="true">{tr('ui.welcomeHeroPrefix')}</span>
           <WordReel
-            words={REEL_WORDS}
+            words={REEL_WORDS.map(w => ({ text: tr(w.key), className: w.className }))}
             index={still ? 0 : reelIndex}
             instant={reelInstant}
             onSlideEnd={handleSlideEnd}
           />
-          <span aria-hidden="true">什么声音？</span>
+          <span aria-hidden="true">{tr('ui.welcomeHeroSuffix')}</span>
         </h1>
-        <p className="text-sm text-ink-2 mt-2.5">让声音有温度，让表达更自由</p>
+        <p className="text-sm text-ink-2 mt-2.5">{tr('ui.welcomeTagline')}</p>
       </div>
 
       {/* The padding here is not spacing -- it is ROOM FOR THE SHADOW, and the negative
@@ -146,8 +148,8 @@ export function Welcome({ onSelect }: { onSelect: (t: Tool) => void }) {
               size={36}
               className="text-accent mx-auto mb-3 transition-transform duration-300 ease-out group-hover:scale-110 group-hover:-rotate-6"
             />
-            <p className="text-xl font-semibold text-accent tracking-[-0.01em]">{a.label}</p>
-            <p className="text-sm text-ink-2 mt-0.5">{a.desc}</p>
+            <p className="text-xl font-semibold text-accent tracking-[-0.01em]">{tr(a.labelKey)}</p>
+            <p className="text-sm text-ink-2 mt-0.5">{tr(a.descKey)}</p>
           </button>
         ))}
       </div>

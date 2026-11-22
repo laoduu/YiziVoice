@@ -1,4 +1,5 @@
 import { getBridge } from './configService'
+import { t } from '../i18n/core'
 import type { HistoryEntry, TtsHistoryEntry, AsrHistoryEntry, HistoryIndex } from './historyTypes'
 
 export type { HistoryEntry, TtsHistoryEntry, AsrHistoryEntry, HistoryIndex }
@@ -109,7 +110,7 @@ export async function getHistoryAudioSrc(entry: { id: string }): Promise<string>
   if (api.platform === 'linux') {
     const res = await api.history.readAudio(entry.id)
     if (!res?.success || !res.dataBase64) {
-      throw new Error(res?.message || '音频读取失败')
+      throw new Error(res?.message || t('errors.audioReadFailed'))
     }
     return `data:audio/wav;base64,${res.dataBase64}`
   }
@@ -132,7 +133,7 @@ export async function downloadHistoryAudio(
   const res = await api.history.exportAudio(id, fileName)
   if (res?.success) return { ok: true }
   if (res?.canceled) return { ok: false } // 用户取消,不当作错误提示
-  return { ok: false, error: res?.message || '下载失败' }
+  return { ok: false, error: res?.message || t('errors.downloadFailed') }
 }
 
 // tts / asr 共用的下载入口
@@ -148,14 +149,14 @@ export async function pruneOrphanAudio(
   const api = getBridge()
   const res = await api.history.pruneOrphanAudio(dryRun)
   if (res?.success) return { ok: true, removed: res.removed ?? 0 }
-  return { ok: false, removed: 0, error: res?.message || '清理失败' }
+  return { ok: false, removed: 0, error: res?.message || t('errors.cleanupFailed') }
 }
 
 // 历史时间显示:当天只显示时分,跨天带日期(左栏列表与工作台结果共用同一格式)
 export function fmtEntryTime(iso: string): string {
   const d = new Date(iso)
   const hm = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
-  if (d.toDateString() === new Date().toDateString()) return `今天 ${hm}`
+  if (d.toDateString() === new Date().toDateString()) return `${t('services.today')} ${hm}`
   return `${d.getMonth() + 1}/${d.getDate()} ${hm}`
 }
 
@@ -171,7 +172,7 @@ function buildTtsFileName(entry: TtsHistoryEntry): string {
 }
 
 function buildAsrFileName(entry: AsrHistoryEntry): string {
-  return `YiziVoice_转写_${stampOf(entry.createdAt)}.wav`
+  return `YiziVoice_${t('services.transcribe')}_${stampOf(entry.createdAt)}.wav`
 }
 
 export async function clearAllHistory(): Promise<void> {

@@ -1,5 +1,6 @@
 import { X, Pencil } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useI18n } from '../../i18n/react'
 import { Tooltip } from './Tooltip'
 
 interface ChipProps {
@@ -13,6 +14,7 @@ interface ChipProps {
 
 // 胶囊选择器:全应用统一的选中样式(主色填充),不再按场景区分色调
 export function Chip({ selected, onClick, onDelete, onEdit, children, title }: ChipProps) {
+  const { t: tr } = useI18n()
   const hasActions = !!(onDelete || onEdit)
   return (
     <span className="group/chip relative inline-flex">
@@ -29,10 +31,10 @@ export function Chip({ selected, onClick, onDelete, onEdit, children, title }: C
       {onEdit && (
         // 定位交给外层 span:Tooltip 的 wrapper 自带 relative,放在按钮上会丢失定位基准
         <span className="absolute -top-1 right-5 hidden group-hover/chip:flex">
-          <Tooltip label="修改">
+          <Tooltip label={tr('common.edit')}>
             <button
               type="button"
-              aria-label="修改"
+              aria-label={tr('common.edit')}
               onClick={e => {
                 e.stopPropagation()
                 onEdit()
@@ -46,10 +48,10 @@ export function Chip({ selected, onClick, onDelete, onEdit, children, title }: C
       )}
       {onDelete && (
         <span className="absolute -top-1 right-1 hidden group-hover/chip:flex">
-          <Tooltip label="删除">
+          <Tooltip label={tr('common.delete')}>
             <button
               type="button"
-              aria-label="删除"
+              aria-label={tr('common.delete')}
               onClick={e => {
                 e.stopPropagation()
                 onDelete()

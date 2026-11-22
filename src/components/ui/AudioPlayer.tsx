@@ -3,6 +3,7 @@ import { Play, Square, Download } from 'lucide-react'
 import { downloadUrl } from '../../services/storage'
 import { downloadHistoryAudio, releaseAudioSrc } from '../../services/historyService'
 import { useToast } from '../Toast'
+import { useI18n } from '../../i18n/react'
 import { Tooltip } from './Tooltip'
 
 interface AudioPlayerProps {
@@ -23,6 +24,7 @@ function fmt(sec: number): string {
 
 // 自定义播放器(M2 卡片):替代原生 <audio controls>
 export function AudioPlayer({ src, downloadName = 'yizivoice_output.wav', historyId, meta }: AudioPlayerProps) {
+  const { t: tr } = useI18n()
   const audioRef = useRef<HTMLAudioElement>(null)
   const { showToast } = useToast()
   const [playing, setPlaying] = useState(false)
@@ -41,7 +43,7 @@ export function AudioPlayer({ src, downloadName = 'yizivoice_output.wav', histor
     if (!el) return
     if (el.paused) {
       void el.play().catch(() => {
-        showToast('音频播放失败，请尝试下载后播放', 'error')
+        showToast(tr('ui.playFailed'), 'error')
         setPlaying(false)
       })
     } else {
@@ -56,10 +58,10 @@ export function AudioPlayer({ src, downloadName = 'yizivoice_output.wav', histor
 
   return (
     <div className="mat-card px-3 py-2.5 flex items-center gap-3">
-      <Tooltip label={playing ? '暂停' : '播放'} className="shrink-0">
+      <Tooltip label={playing ? tr('common.pause') : tr('common.play')} className="shrink-0">
         <button
           type="button"
-          aria-label={playing ? '暂停' : '播放'}
+          aria-label={playing ? tr('common.pause') : tr('common.play')}
           onClick={toggle}
           className="w-9 h-9 shrink-0 rounded-full bg-accent-strong text-accent-on grid place-items-center cursor-pointer transition-all duration-100 ease-out hover:bg-accent-hover"
         >
@@ -85,8 +87,8 @@ export function AudioPlayer({ src, downloadName = 'yizivoice_output.wav', histor
 
       <button
         type="button"
-        title="下载音频"
-        aria-label="下载音频"
+        title={tr('common.downloadAudio')}
+        aria-label={tr('common.downloadAudio')}
         onClick={() => void (historyId ? downloadHistoryAudio(historyId, downloadName) : downloadUrl(src, downloadName))}
         className="w-8 h-8 shrink-0 rounded-sm grid place-items-center text-ink-3 hover:text-accent hover:bg-surface-hover cursor-pointer transition-colors"
       >

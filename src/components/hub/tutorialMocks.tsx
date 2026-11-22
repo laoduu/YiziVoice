@@ -3,17 +3,19 @@ import {
   AudioLines, Check, Copy, Download, HelpCircle, History, Mic, Palette, Play,
   Trash2, Upload,
 } from 'lucide-react'
+import { useI18n } from '../../i18n/react'
 
 // Presentational only: these are coarse "interface sketches", not a second product UI.
 // Every frame is aria-hidden and pointer-events-none so it never steals focus or clicks.
 
 function MockFrame({ label, children }: { label: string; children: ReactNode }) {
+  const { t: tr } = useI18n()
   return (
     <div
       aria-hidden="true"
       className="select-none pointer-events-none rounded-md border border-line bg-surface-1 p-3"
     >
-      <p className="text-xs text-ink-3 mb-2">界面示意 · {label}</p>
+      <p className="text-xs text-ink-3 mb-2">{tr('tutorial.mock.frame', { label })}</p>
       {children}
     </div>
   )
@@ -63,29 +65,31 @@ function MockDisc({ icon: Icon, label }: { icon: typeof Mic; label: string }) {
 }
 
 export function SettingsKeyMock() {
+  const { t: tr } = useI18n()
   return (
-    <MockFrame label="设置 · 接口密钥">
+    <MockFrame label={tr('tutorial.mock.settingsKey')}>
       <div className="flex items-center justify-between">
         <MockLabel>MiMo API Key</MockLabel>
-        <span className="text-xs text-ink-3">已配置</span>
+        <span className="text-xs text-ink-3">{tr('settings.keyConfigured')}</span>
       </div>
       <MockFocus className="mt-1.5">
         <MockField>
           <span className="flex-1 truncate">sk-••••••••••••</span>
-          <span className="text-ink-3">验证</span>
-          <MockButton tone="primary">保存</MockButton>
+          <span className="text-ink-3">{tr('settings.verify')}</span>
+          <MockButton tone="primary">{tr('common.save')}</MockButton>
         </MockField>
       </MockFocus>
-      <p className="text-xs text-ink-3 mt-2">保存后不再回显；替换时输入新 Key</p>
+      <p className="text-xs text-ink-3 mt-2">{tr('tutorial.mock.keyHint')}</p>
     </MockFrame>
   )
 }
 
 export function SettingsModelMock() {
+  const { t: tr } = useI18n()
   return (
-    <MockFrame label="设置 · AI 文本模型">
+    <MockFrame label={tr('tutorial.mock.settingsModel')}>
       <div className="flex items-center gap-1">
-        <MockLabel>AI 文本模型</MockLabel>
+        <MockLabel>{tr('settings.textModel')}</MockLabel>
         <HelpCircle size={12} className="text-ink-3" />
       </div>
       <MockFocus className="mt-1.5">
@@ -93,7 +97,7 @@ export function SettingsModelMock() {
           <MockField className="flex-1">
             <span className="truncate">mimo-v2.6-flash</span>
           </MockField>
-          <MockButton>获取模型</MockButton>
+          <MockButton>{tr('settings.fetchModels')}</MockButton>
         </div>
       </MockFocus>
       <div className="mt-2 rounded-sm border border-line bg-surface-2 py-1">
@@ -109,26 +113,27 @@ export function SettingsModelMock() {
 }
 
 export function VoiceSampleMock() {
+  const { t: tr } = useI18n()
   return (
-    <MockFrame label="克隆音色 · 提交音色样本">
+    <MockFrame label={tr('tutorial.mock.voiceSample')}>
       <div className="flex items-start justify-center gap-3">
-        <MockDisc icon={Mic} label="开始录音" />
-        <MockDisc icon={Upload} label="上传文件" />
-        <MockDisc icon={Palette} label="设计音色" />
+        <MockDisc icon={Mic} label={tr('tutorial.mock.startRecording')} />
+        <MockDisc icon={Upload} label={tr('tutorial.mock.uploadFile')} />
+        <MockDisc icon={Palette} label={tr('tutorial.mock.designVoice')} />
       </div>
       <div className="mt-3 flex items-center justify-between gap-2">
-        <MockLabel>音色描述</MockLabel>
+        <MockLabel>{tr('tutorial.mock.voiceDesc')}</MockLabel>
         <MockFocus className="rounded-sm">
-          <MockButton>AI 生成描述与试听文本</MockButton>
+          <MockButton>{tr('tutorial.mock.aiGenBoth')}</MockButton>
         </MockFocus>
       </div>
       <MockField className="mt-1.5">
-        <span className="truncate">三十岁女性，声音温柔清晰…</span>
+        <span className="truncate">{tr('tutorial.mock.voiceDescSample')}</span>
       </MockField>
       <div className="mt-2">
-        <MockLabel>试听文本</MockLabel>
+        <MockLabel>{tr('tutorial.mock.previewText')}</MockLabel>
         <MockField className="mt-1.5">
-          <span className="truncate">留空则自动生成</span>
+          <span className="truncate">{tr('tutorial.mock.previewPlaceholder')}</span>
         </MockField>
       </div>
     </MockFrame>
@@ -136,62 +141,65 @@ export function VoiceSampleMock() {
 }
 
 export function TtsMock() {
+  const { t: tr } = useI18n()
   return (
-    <MockFrame label="文生音">
+    <MockFrame label={tr('nav.tts')}>
       <div className="flex items-center gap-1">
-        {['标签方式', '自由描述', '导演演绎'].map((label, i) => (
+        {(['tutorial.mock.modeTags', 'tutorial.mock.modeFree', 'tutorial.mock.modeDirector'] as const).map((key, i) => (
           <span
-            key={label}
+            key={key}
             className={`h-7 px-2 rounded-full inline-flex items-center text-xs font-medium ${
               i === 1 ? 'bg-surface-2 text-accent border border-accent' : 'text-ink-3 border border-line'
             }`}
           >
-            {label}
+            {tr(key)}
           </span>
         ))}
       </div>
       <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
         <span className="w-1.5 h-1.5 rounded-full bg-accent" />
-        当前音色：MiMo-默认
+        {tr('tutorial.mock.currentVoice')}
       </div>
       <MockField multiline className="mt-2">
-        <span className="truncate">输入要朗读的文案…</span>
+        <span className="truncate">{tr('tutorial.mock.textPlaceholder')}</span>
       </MockField>
       <div className="mt-2 flex justify-end">
-        <MockButton tone="primary">生成语音</MockButton>
+        <MockButton tone="primary">{tr('tutorial.mock.generate')}</MockButton>
       </div>
     </MockFrame>
   )
 }
 
 export function AsrMock() {
+  const { t: tr } = useI18n()
   return (
-    <MockFrame label="音转文">
+    <MockFrame label={tr('nav.asr')}>
       <div className="flex items-start justify-center gap-5">
-        <MockDisc icon={Mic} label="开始录音" />
-        <MockDisc icon={Upload} label="上传文件" />
+        <MockDisc icon={Mic} label={tr('tutorial.mock.startRecording')} />
+        <MockDisc icon={Upload} label={tr('tutorial.mock.uploadFile')} />
       </div>
       <MockField multiline className="mt-3">
-        <span className="truncate">识别结果会显示在这里…</span>
+        <span className="truncate">{tr('tutorial.mock.asrPlaceholder')}</span>
       </MockField>
       <div className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
         <Copy size={12} />
-        可一键复制文本
+        {tr('tutorial.mock.copyHint')}
       </div>
     </MockFrame>
   )
 }
 
 export function HistoryMock() {
+  const { t: tr } = useI18n()
   return (
-    <MockFrame label="历史记录">
+    <MockFrame label={tr('nav.history')}>
       <div className="rounded-sm bg-surface-hover px-2 py-2">
         <div className="flex items-center gap-1.5">
           <AudioLines size={12} className="text-accent" />
-          <span className="text-xs font-medium text-ink">文生音 · 老独</span>
+          <span className="text-xs font-medium text-ink">{tr('tutorial.mock.historyItem')}</span>
           <span className="ml-auto text-xs text-ink-3">01:22</span>
         </div>
-        <p className="text-xs text-ink-2 mt-1 truncate">(愤怒)你以为你断了我的代言，就能让我跪着求你？</p>
+        <p className="text-xs text-ink-2 mt-1 truncate">{tr('tutorial.mock.historyText')}</p>
         <div className="flex items-center justify-end gap-2 mt-1.5 text-ink-3">
           <Play size={12} />
           <Copy size={12} />
@@ -200,23 +208,16 @@ export function HistoryMock() {
           <Trash2 size={12} className="text-danger-text" />
         </div>
       </div>
-      <p className="text-xs text-ink-3 mt-2">悬停时显示操作：播放 / 复制 / 还原 / 下载 / 删除</p>
+      <p className="text-xs text-ink-3 mt-2">{tr('tutorial.mock.historyOpsHint')}</p>
     </MockFrame>
   )
 }
 
 export function StorageTreeMock() {
+  const { t: tr } = useI18n()
   return (
-    <MockFrame label="数据目录">
-      <pre className="text-xs leading-relaxed text-ink-2 whitespace-pre">{`文档 / YiziVoice
-├─ History/
-│  ├─ index.json
-│  ├─ tts/
-│  └─ asr/
-└─ config/
-   ├─ voices/
-   ├─ styles/
-   └─ audio-tags/`}</pre>
+    <MockFrame label={tr('tutorial.mock.storageTree')}>
+      <pre className="text-xs leading-relaxed text-ink-2 whitespace-pre">{tr('tutorial.mock.storageTreeText')}</pre>
     </MockFrame>
   )
 }

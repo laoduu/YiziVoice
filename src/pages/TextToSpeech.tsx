@@ -14,6 +14,7 @@ import { Chip } from '../components/ui/Chip'
 import { AudioPlayer } from '../components/ui/AudioPlayer'
 import { Segmented } from '../components/ui/Segmented'
 import { NaturalLanguagePanel, useNaturalLanguageState } from '../components/tts/NaturalLanguagePanel'
+import { useI18n } from '../i18n/react'
 
 function openExternalLink(url: string) {
   if ((window as any).desktopAPI?.openExternalLink) {
@@ -87,6 +88,7 @@ function legacyNaturalState(style: string, styles: StyleItem[]): LegacyNaturalSt
 }
 
 export default function TextToSpeech() {
+  const { t: tr } = useI18n()
   const { resetSignal, ttsLoadSignal, takeTtsEntry, rightOpen, toggleRight } = useApp()
   const [text, setText] = useState('')
   const [voice, setVoice] = useState('mimo_default')
@@ -120,9 +122,9 @@ export default function TextToSpeech() {
   // 两个状态（ttsMode + nl.nlMode），所以历史记录的读写格式一个字节都不改。
   const styleMethod: 'tags' | 'paragraph' | 'director' = ttsMode === 'tags' ? 'tags' : nl.nlMode
   const STYLE_METHOD_HINTS: Record<'tags' | 'paragraph' | 'director', string> = {
-    tags: '用现成标签，最快、结果最稳',
-    paragraph: '写一段话，最自由；可套示例或让 AI 帮写',
-    director: '按角色 / 场景 / 指导三要素描述，表演意图最明确',
+    tags: tr('tts.hintTags'),
+    paragraph: tr('tts.hintParagraph'),
+    director: tr('tts.hintDirector'),
   }
   const setStyleMethod = (m: 'tags' | 'paragraph' | 'director') => {
     if (m === 'tags') {
@@ -183,10 +185,10 @@ export default function TextToSpeech() {
           historyId: entry.id,
         },
       ])
-      showToast('已还原生成时的状态', 'info')
+      showToast(tr('tts.restored'), 'info')
     } catch {
       setResults([])
-      showToast('历史音频加载失败，仅还原了参数', 'error')
+      showToast(tr('tts.restoreAudioFailed'), 'error')
     }
   }
 
@@ -219,7 +221,7 @@ export default function TextToSpeech() {
     setStyle(prev => (prev === value ? '' : value))
   }
 
-  const PREVIEW_TEXT = '你好，我是你的语音助手'
+  const PREVIEW_TEXT = tr('tts.previewText')
 
   const handleVoicePreview = async (voiceId: string, profile?: { audioBase64: string; mimeType: string; previewAudioBase64?: string }) => {
     voicePreviewRef.current?.pause()
@@ -229,7 +231,7 @@ export default function TextToSpeech() {
     }
     const settings = await loadAppSettings()
     if (!settings.api.apiKeyConfigured) {
-      showToast('请先在设置中配置 API Key')
+      showToast(tr('tts.needApiKey'))
       return
     }
     setPreviewingId(voiceId)
@@ -315,7 +317,7 @@ export default function TextToSpeech() {
     if (!text.trim()) return
     const settings = await loadAppSettings()
     if (!settings.api.apiKeyConfigured) {
-      showToast('请先在设置中配置 API Key')
+      showToast(tr('tts.needApiKey'))
       return
     }
 
@@ -338,9 +340,9 @@ export default function TextToSpeech() {
     }
     if (displayStyleName === undefined && userPrompt) {
       if (ttsMode === 'natural' && nl.nlMode === 'director') {
-        displayStyleName = '导演模式'
+        displayStyleName = tr('tts.directorMode')
       } else if (ttsMode === 'natural') {
-        displayStyleName = userPrompt.slice(0, 16).replace(/\s+/g, ' ').trim() || '自然语言描述'
+        displayStyleName = userPrompt.slice(0, 16).replace(/\s+/g, ' ').trim() || tr('tts.naturalDescription')
       } else if (ttsMode === 'tags') {
         displayStyleName = style.slice(0, 16)
       }
@@ -353,7 +355,7 @@ export default function TextToSpeech() {
         const profileId = voice.replace('clone_', '')
         const profile = await loadVoice(profileId)
         if (!profile) {
-          showToast('克隆音色角色不存在，请重新选择')
+          showToast(tr('tts.cloneProfileMissing'))
           setLoading(false)
           return
         }
@@ -406,7 +408,7 @@ export default function TextToSpeech() {
           console.error('[TTS] Failed to save history:', e)
         }
       } else {
-        showToast('生成失败，请重试')
+        showToast(tr('tts.generateFailed'))
       }
     } catch (e) {
       showToast(getApiErrorMessage(e))
@@ -424,13 +426,13 @@ export default function TextToSpeech() {
   // —— 音色数据整理 ——
   const q = voiceQuery.trim().toLowerCase()
   const presetGroups = [
-    { key: 'zh', label: '中文音色', voices: PRESET_VOICES.filter(v => v.lang === '中文' && (!q || v.name.toLowerCase().includes(q))) },
-    { key: 'en', label: '英文音色', voices: PRESET_VOICES.filter(v => v.lang === '英文' && (!q || v.name.toLowerCase().includes(q))) },
+    { key: 'zh', label: tr('tts.zhVoices'), voices: PRESET_VOICES.filter(v => v.lang === '中文' && (!q || v.name.toLowerCase().includes(q))) },
+    { key: 'en', label: tr('tts.enVoices'), voices: PRESET_VOICES.filter(v => v.lang === '英文' && (!q || v.name.toLowerCase().includes(q))) },
   ].filter(g => g.voices.length > 0)
 
   const clonedGroups: Record<string, any[]> = {}
   voiceList.voices.forEach((p: any) => {
-    const cat = p.category || '未分类'
+    const cat = p.category || tr('common.uncategorized')
     if (!clonedGroups[cat]) clonedGroups[cat] = []
     clonedGroups[cat].push(p)
   })
@@ -460,7 +462,7 @@ export default function TextToSpeech() {
   const currentVoiceName = (() => {
     if (voice.startsWith('clone_')) {
       const id = voice.slice(6)
-      return voiceList.voices.find((v: any) => v.id === id)?.name ?? '克隆音色'
+      return voiceList.voices.find((v: any) => v.id === id)?.name ?? tr('tts.cloneVoices')
     }
     return PRESET_VOICES.find(v => v.id === voice)?.name ?? ''
   })()
@@ -482,14 +484,14 @@ export default function TextToSpeech() {
           <div className="flex items-center gap-3 min-w-0">
             <AudioLines size={30} className="text-accent shrink-0" />
             <div className="min-w-0">
-              <h2 className="text-xl font-semibold text-ink tracking-[-0.01em]">文生音</h2>
-              <p className="text-sm text-ink-2 mt-0.5">输入文案，选择右侧音色与风格，一键生成语音</p>
+              <h2 className="text-xl font-semibold text-ink tracking-[-0.01em]">{tr('nav.tts')}</h2>
+              <p className="text-sm text-ink-2 mt-0.5">{tr('tts.pageSubtitle')}</p>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="flex items-center gap-1.5 text-sm px-2 py-1 rounded-full bg-accent-softer text-ink-2">
               <Lightbulb size={14} className="text-accent" />
-              推荐用
+              {tr('tts.recommendUse')}
               <button
                 onClick={() => openExternalLink('https://md.yizigpt.com')}
                 className="font-medium text-accent hover:underline cursor-pointer"
@@ -514,20 +516,20 @@ export default function TextToSpeech() {
                 value={styleMethod}
                 onChange={setStyleMethod}
                 options={[
-                  { value: 'tags', label: <span className="inline-flex items-center gap-1"><Tag size={14} />标签方式</span> },
-                  { value: 'paragraph', label: <span className="inline-flex items-center gap-1"><FileText size={14} />自由描述</span> },
-                  { value: 'director', label: <span className="inline-flex items-center gap-1"><Drama size={14} />导演演绎</span> },
+                  { value: 'tags', label: <span className="inline-flex items-center gap-1"><Tag size={14} />{tr('tts.modeTags')}</span> },
+                  { value: 'paragraph', label: <span className="inline-flex items-center gap-1"><FileText size={14} />{tr('tts.modeParagraph')}</span> },
+                  { value: 'director', label: <span className="inline-flex items-center gap-1"><Drama size={14} />{tr('tts.modeDirector')}</span> },
                 ]}
               />
               {currentVoiceName && (
                 /* 这是**状态**不是选择器:只说明现在用的是哪个音色。换音色/展开音色库走侧栏开关
                    （PaneToggle，同一个动作只留一个入口），所以这里不给 cursor/hover 这些可点暗示。 */
                 <span
-                  title="当前使用的音色"
+                  title={tr('tts.currentVoiceTitle')}
                   className="ml-auto inline-flex items-center gap-1.5 h-[30px] px-2.5 rounded-full bg-accent-soft text-accent text-sm font-medium max-w-[180px]"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
-                  <span className="truncate">当前音色：{currentVoiceName}</span>
+                  <span className="truncate">{tr('tts.currentVoice', { name: currentVoiceName })}</span>
                 </span>
               )}
             </div>
@@ -552,8 +554,8 @@ export default function TextToSpeech() {
                   ))}
                   <button
                     type="button"
-                    aria-label="添加自定义风格"
-                    title="添加自定义风格"
+                    aria-label={tr('tts.addCustomStyle')}
+                    title={tr('tts.addCustomStyle')}
                     onClick={() => {
                       setNewStyleLabel('')
                       setNewStyleValue('')
@@ -569,23 +571,23 @@ export default function TextToSpeech() {
                 {showAddStyle && (
                   <div className="mt-3 mat-card p-3 space-y-2.5">
                     <p className="text-xs font-semibold text-ink-2">
-                      {editingStyleId ? '修改自定义风格' : '新增自定义风格'}
+                      {editingStyleId ? tr('tts.editCustomStyle') : tr('tts.newCustomStyle')}
                     </p>
-                    <Input placeholder="标签名" value={newStyleLabel} onChange={e => setNewStyleLabel(e.target.value)} />
+                    <Input placeholder={tr('tts.styleLabelPlaceholder')} value={newStyleLabel} onChange={e => setNewStyleLabel(e.target.value)} />
                     <Input
-                      placeholder="风格描述，如：用慵懒低沉的语调，语速缓慢"
+                      placeholder={tr('tts.styleValuePlaceholder')}
                       value={newStyleValue}
                       onChange={e => setNewStyleValue(e.target.value)}
                     />
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" onClick={handleCancelStyleForm}>取消</Button>
+                      <Button variant="ghost" size="sm" onClick={handleCancelStyleForm}>{tr('common.cancel')}</Button>
                       <Button
                         variant="primary"
                         size="sm"
                         disabled={!newStyleLabel.trim() || !newStyleValue.trim()}
                         onClick={handleSaveCustomStyle}
                       >
-                        保存
+                        {tr('common.save')}
                       </Button>
                     </div>
                   </div>
@@ -600,14 +602,14 @@ export default function TextToSpeech() {
           <div className="mat-card p-3.5 space-y-2">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm font-medium text-ink-2">朗读文本</p>
-                <p className="text-xs text-ink-3 mt-0.5">输入要转换为语音的文案，可使用右侧音色库</p>
+                <p className="text-sm font-medium text-ink-2">{tr('tts.readText')}</p>
+                <p className="text-xs text-ink-3 mt-0.5">{tr('tts.readTextHint')}</p>
               </div>
               {text && (
                 <button
                   type="button"
-                  aria-label="清空朗读文本"
-                  title="清空"
+                  aria-label={tr('tts.clearReadText')}
+                  title={tr('common.clear')}
                   onClick={() => { setText(''); textareaRef.current?.focus() }}
                   className="w-6 h-6 rounded-sm grid place-items-center text-ink-3 hover:text-danger-text hover:bg-danger-soft cursor-pointer transition-colors"
                 >
@@ -621,8 +623,8 @@ export default function TextToSpeech() {
                     它们只在「标签方式」下出现：那是唯一会用到「标签」这个词的地方。 */}
                 <div className="flex items-center gap-2 flex-wrap">
                   {([
-                    { key: 'opening', label: '开场标签', Icon: Quote },
-                    { key: 'inline', label: '内嵌标签', Icon: Braces },
+                    { key: 'opening', label: tr('tts.openingTag'), Icon: Quote },
+                    { key: 'inline', label: tr('tts.inlineTag'), Icon: Braces },
                   ] as const).map(({ key, label, Icon }) => (
                     <button
                       key={key}
@@ -639,7 +641,7 @@ export default function TextToSpeech() {
                       <ChevronDown size={14} className={`transition-transform duration-100 ${tagPanel === key ? 'rotate-180' : ''}`} />
                     </button>
                   ))}
-                  <span className="hidden min-[1280px]:inline text-xs text-ink-3">点击展开，选择后插入文案</span>
+                  <span className="hidden min-[1280px]:inline text-xs text-ink-3">{tr('tts.tagPickerHint')}</span>
                 </div>
 
                 {tagPanel === 'opening' && (
@@ -685,12 +687,12 @@ export default function TextToSpeech() {
               <Textarea
                 ref={textareaRef}
                 className="h-[170px] resize-none pr-14 placeholder:text-xs"
-                placeholder="在此输入或粘贴要转换为语音的文案…"
+                placeholder={tr('tts.readTextPlaceholder')}
                 value={text}
                 onChange={e => setText(e.target.value)}
               />
               <span className="absolute bottom-2 right-2 h-6 flex items-center text-xs text-ink-3 tabular-nums pointer-events-none">
-                {text.length} 字
+                {tr('tts.charCount', { n: text.length })}
               </span>
             </div>
           </div>
@@ -710,14 +712,14 @@ export default function TextToSpeech() {
             </div>
           ) : (
             <div className="py-6 text-center">
-              <p className="text-xs text-ink-3">生成的语音会显示在这里</p>
+              <p className="text-xs text-ink-3">{tr('tts.resultsPlaceholder')}</p>
             </div>
           )}
         </div>
 
         <div className="px-4 py-3 border-t border-line flex items-center justify-end shrink-0">
           <Button variant="primary" size="lg" loading={loading} disabled={!text.trim()} onClick={handleGenerate}>
-            {loading ? '生成中…' : '生成语音'}
+            {loading ? tr('tts.generating') : tr('tts.generate')}
           </Button>
         </div>
       </section>
@@ -731,14 +733,14 @@ export default function TextToSpeech() {
             {/* 音色库 */}
             <section>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-base font-semibold text-ink">音色库</h3>
+                <h3 className="text-base font-semibold text-ink">{tr('tts.voiceLibrary')}</h3>
                 <div className="flex items-center gap-2">
                   <div className="relative w-[120px]">
                     <Search size={12} className="absolute left-2 top-1/2 -translate-y-1/2 text-ink-3 pointer-events-none" />
                     <input
                       value={voiceQuery}
                       onChange={e => setVoiceQuery(e.target.value)}
-                      placeholder="搜索音色"
+                      placeholder={tr('tts.searchVoice')}
                       className="w-full h-[26px] pl-7 pr-2 rounded-sm bg-surface-2 border border-line text-xs text-ink placeholder:text-ink-3 outline-none focus:border-accent transition-colors"
                     />
                   </div>
@@ -774,8 +776,8 @@ export default function TextToSpeech() {
                             </button>
                             <button
                               type="button"
-                              aria-label="试听"
-                              title="试听"
+                              aria-label={tr('common.preview')}
+                              title={tr('common.preview')}
                               onClick={e => { e.stopPropagation(); handleVoicePreview(v.id) }}
                               className={`absolute right-9 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full grid place-items-center cursor-pointer transition-all ${
                                 previewingId === v.id
@@ -795,7 +797,7 @@ export default function TextToSpeech() {
 
               {Object.keys(clonedGroups).length > 0 && (
                 <div>
-                  {renderGroupHeader('clone', '克隆音色', Object.values(clonedGroups).flat().length)}
+                  {renderGroupHeader('clone', tr('tts.cloneVoices'), Object.values(clonedGroups).flat().length)}
                   {!collapsedGroups.has('clone') &&
                     Object.entries(clonedGroups).map(([cat, items]) => (
                       <div key={cat} className="mb-2">
@@ -815,12 +817,12 @@ export default function TextToSpeech() {
                                   <span className="flex-1 min-w-0 truncate text-sm font-medium text-ink">
                                     {p.name}
                                   </span>
-                                  <span className="text-xs px-1.5 py-px rounded-full bg-accent-2-soft text-accent-2-text">克隆</span>
+                                  <span className="text-xs px-1.5 py-px rounded-full bg-accent-2-soft text-accent-2-text">{tr('tts.cloneBadge')}</span>
                                 </button>
                                 <button
                                   type="button"
-                                  aria-label="试听"
-                                  title="试听"
+                                  aria-label={tr('common.preview')}
+                                  title={tr('common.preview')}
                                   onClick={async e => {
                                     e.stopPropagation()
                                     const full = await loadVoice(p.id)

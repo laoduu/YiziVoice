@@ -11,6 +11,9 @@ import {
 } from '../../services/mimoApi'
 import { loadApiKey, loadAppSettings, saveAppSettings } from '../../services/configService'
 import { cachedTheme } from '../../services/theme'
+import { useI18n } from '../../i18n/react'
+import { LANGUAGES, type Lang } from '../../i18n/core'
+import { Segmented } from '../ui/Segmented'
 
 const REGISTER_URL = 'https://platform.xiaomimimo.com?ref=DHLC96'
 const INVITE_CODE = 'DHLC96'
@@ -24,13 +27,14 @@ function openExternalLink(url: string) {
 }
 
 function CopyButton({ text }: { text: string }) {
+  const { t: tr } = useI18n()
   return (
     <button
       type="button"
       onClick={() => navigator.clipboard.writeText(text)}
       className="text-sm font-medium px-2 py-0.5 rounded-sm border border-line text-accent hover:bg-surface-hover cursor-pointer transition-colors"
     >
-      复制
+      {tr('common.copy')}
     </button>
   )
 }
@@ -63,6 +67,7 @@ interface DataDirInfo {
 //   - 全页仅「保存 API Key」一个实心主按钮(规范 §7:每视图仅 1 个主 CTA)
 //   - 主题不在此设置:标题栏已有更顶层的入口,放这里属重复
 export function SettingsPanel() {
+  const { t: tr, lang, setLang } = useI18n()
   const [apiKey, setApiKey] = useState('')
   const [keyConfigured, setKeyConfigured] = useState(false)
   const [textModel, setTextModel] = useState(DEFAULT_TEXT_MODEL)
@@ -141,7 +146,7 @@ export function SettingsPanel() {
       setModelsOpen(true)
     } catch (e) {
       setModelsOpen(false)
-      showToast(getApiErrorMessage(e) || '获取模型失败', 'error')
+      showToast(getApiErrorMessage(e) || tr('settings.fetchModelsFailed'), 'error')
     } finally {
       setModelsLoading(false)
     }
@@ -159,10 +164,10 @@ export function SettingsPanel() {
     setTextModel(next)
     setModelsOpen(false)
     if (!result.success) {
-      showToast(result.message || '模型已保存，但凭据库操作失败', 'error')
+      showToast(result.message || tr('settings.modelSavedKeyringFailed'), 'error')
       return
     }
-    showToast('AI 文本模型已更新', 'success')
+    showToast(tr('settings.modelSaved'), 'success')
   }
 
   const handleSelectModel = (id: string) => {
@@ -193,14 +198,14 @@ export function SettingsPanel() {
       setTextModel(nextTextModel)
       if (!result.success) {
         // Keep the draft so the user can retry; never leak it into settings.json.
-        showToast(result.message || 'API Key 未能写入系统凭据库', 'error')
+        showToast(result.message || tr('settings.keySaveFailed'), 'error')
         return
       }
       initClient({ apiKey: draft })
       setApiKey('')
       setVerifyState('idle')
       setKeyConfigured(result.keyConfigured)
-      showToast('API Key 已加密保存', 'success')
+      showToast(tr('settings.keySaved'), 'success')
     } finally {
       setSaving(false)
     }
@@ -222,7 +227,7 @@ export function SettingsPanel() {
       setSavedTextModel(nextTextModel)
       setTextModel(nextTextModel)
       if (!result.success) {
-        showToast(result.message || '清除 API Key 失败', 'error')
+        showToast(result.message || tr('settings.keyClearFailed'), 'error')
         return
       }
       clearClient()
@@ -230,7 +235,7 @@ export function SettingsPanel() {
       setVerifyState('idle')
       setVerifying(false)
       setKeyConfigured(false)
-      showToast('API Key 已清除', 'success')
+      showToast(tr('settings.keyCleared'), 'success')
     } finally {
       setSaving(false)
     }
@@ -251,14 +256,14 @@ export function SettingsPanel() {
     try {
       const result = await api.storage.migrateData(selectedDir)
       if (result.success) {
-        showToast('数据迁移完成，新目录已生效', 'success')
+        showToast(tr('settings.migrateDone'), 'success')
         setSelectedDir(null)
         await loadDataDirInfo()
       } else {
-        showToast(result.message || '迁移失败')
+        showToast(result.message || tr('settings.migrateFailed'))
       }
     } catch (e: any) {
-      showToast('迁移失败：' + (e.message || '未知错误'))
+      showToast(tr('settings.migrateFailedWith', { message: e.message || tr('settings.unknownError') }))
     } finally {
       setMigrating(false)
     }
@@ -268,16 +273,16 @@ export function SettingsPanel() {
     const api = (window as any).desktopAPI
     if (!api?.storage?.resetDataDir) return
     await api.storage.resetDataDir()
-    showToast('已恢复默认目录', 'info')
+    showToast(tr('settings.dirResetDone'), 'info')
     setSelectedDir(null)
     await loadDataDirInfo()
   }
 
   const statusLabel =
-    verifyState === 'verified' ? '验证通过'
-    : verifyState === 'failed' ? '验证失败'
-    : keyConfigured ? '已配置'
-    : '未配置'
+    verifyState === 'verified' ? tr('settings.verifyOk')
+    : verifyState === 'failed' ? tr('settings.verifyFailed')
+    : keyConfigured ? tr('settings.keyConfigured')
+    : tr('settings.keyNotConfigured')
   const statusTone =
     verifyState === 'verified' ? 'text-accent'
     : verifyState === 'failed' ? 'text-danger-text'
@@ -286,9 +291,23 @@ export function SettingsPanel() {
 
   return (
     <div className="space-y-6">
+      {/* 语言:界面显示语言,即时生效并持久化(settings.lang + localStorage) */}
+      <section>
+        <SectionTitle>{tr('settings.language')}</SectionTitle>
+        <div className="flex items-center gap-3">
+          <Segmented
+            size="sm"
+            options={LANGUAGES.map(l => ({ value: l.value, label: l.label }))}
+            value={lang}
+            onChange={v => setLang(v as Lang)}
+          />
+          <Hint>{tr('settings.languageHint')}</Hint>
+        </div>
+      </section>
+
       {/* 接口密钥:左右并列——左填 Key,右取 Key,两列同构(标题 + 输入框样式的控件 + 说明) */}
       <section>
-        <SectionTitle>接口密钥</SectionTitle>
+        <SectionTitle>{tr('settings.apiKey')}</SectionTitle>
 
         <div className="grid grid-cols-2 gap-4 items-start">
           {/* 左列:填写 Key */}
@@ -297,8 +316,8 @@ export function SettingsPanel() {
               <span className="flex items-center gap-1.5">
                 <label htmlFor="mimo-api-key" className="text-sm font-medium text-ink-2">MiMo API Key</label>
                 {/* 加密说明收进 hover,不再占用版面 */}
-                <Tooltip label="加密存放于系统钥匙串（Windows 凭据管理器 / macOS 钥匙串），保存后不可回看" align="start">
-                  <span className="text-ink-3 inline-flex cursor-help" aria-label="密钥存储说明">
+                <Tooltip label={tr('settings.keyStorageHint')} align="start">
+                  <span className="text-ink-3 inline-flex cursor-help" aria-label={tr('settings.keyStorageAria')}>
                     <ShieldCheck size={14} />
                   </span>
                 </Tooltip>
@@ -311,7 +330,7 @@ export function SettingsPanel() {
                     onClick={() => setClearKeyOpen(true)}
                     className="text-sm font-medium text-danger-text hover:underline cursor-pointer"
                   >
-                    清除
+                    {tr('settings.clear')}
                   </button>
                 )}
               </span>
@@ -321,7 +340,7 @@ export function SettingsPanel() {
               <Input
                 id="mimo-api-key"
                 type="text"
-                placeholder={keyConfigured ? '已加密保存，输入新 Key 可替换' : 'sk-...'}
+                placeholder={keyConfigured ? tr('settings.keyPlaceholderSaved') : 'sk-...'}
                 value={apiKey}
                 onChange={e => {
                   verifySeq.current += 1
@@ -341,7 +360,7 @@ export function SettingsPanel() {
                   disabled={!apiKey.trim() || verifying || saving}
                   className="h-6 px-2 rounded-sm text-sm font-medium text-ink-2 hover:bg-surface-hover hover:text-ink disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-colors"
                 >
-                  {verifying ? '验证中' : '验证'}
+                  {verifying ? tr('settings.verifying') : tr('settings.verify')}
                 </button>
                 <button
                   type="button"
@@ -349,16 +368,16 @@ export function SettingsPanel() {
                   disabled={!apiKey.trim() || saving || verifying}
                   className="h-6 px-2.5 rounded-sm text-sm font-medium bg-accent-strong text-accent-on hover:bg-accent-hover disabled:bg-surface-2 disabled:text-ink-3 disabled:hover:bg-surface-2 disabled:opacity-100 disabled:cursor-not-allowed cursor-pointer transition-colors"
                 >
-                  保存
+                  {tr('common.save')}
                 </button>
               </div>
             </div>
 
             <div className="mt-4">
               <div className="flex items-center gap-1.5 mb-1.5">
-                <label htmlFor="ai-text-model" className="text-sm font-medium text-ink-2">AI 文本模型</label>
-                <Tooltip label="用于本应用内 AI 生成风格描述" align="start">
-                  <span className="text-ink-3 inline-flex cursor-help" aria-label="文本模型用途">
+                <label htmlFor="ai-text-model" className="text-sm font-medium text-ink-2">{tr('settings.textModel')}</label>
+                <Tooltip label={tr('settings.textModelHint')} align="start">
+                  <span className="text-ink-3 inline-flex cursor-help" aria-label={tr('settings.textModelAria')}>
                     <HelpCircle size={14} />
                   </span>
                 </Tooltip>
@@ -387,7 +406,7 @@ export function SettingsPanel() {
                     autoComplete="off"
                   />
                   <Button variant="secondary" loading={modelsLoading} onClick={handleFetchModels}>
-                    获取模型
+                    {tr('settings.fetchModels')}
                   </Button>
                 </div>
 
@@ -397,7 +416,7 @@ export function SettingsPanel() {
                     className="mat-overlay absolute z-[80] top-full mt-1.5 left-0 right-0 py-1.5 max-h-64 overflow-y-auto animate-pop-in"
                   >
                     {aiModels.length === 0 ? (
-                      <p className="px-3 py-2 text-sm text-ink-3">没有可用的文本模型</p>
+                      <p className="px-3 py-2 text-sm text-ink-3">{tr('settings.noModels')}</p>
                     ) : aiModels.map(m => (
                       <button
                         key={m.id}
@@ -415,10 +434,10 @@ export function SettingsPanel() {
               </div>
 
               <Hint className="mt-2">
-                友情提示：MiMo-TTS系列语音生成模型免费调用，而MiMo-ASR语音转文字模型和MiMo-2.6系列文本生成模型，为付费模型，使用时需账户有余额，注册后填写右侧邀请码可额外获得10元体验金。
+                {tr('settings.pricingHint')}
               </Hint>
               <p className="text-xs font-medium text-accent mt-1">
-                建议使用mimo-v2.6-flash，性能足够，每次生成音色描述仅需几分钱。
+                {tr('settings.modelSuggestion')}
               </p>
             </div>
           </div>
@@ -426,13 +445,13 @@ export function SettingsPanel() {
           {/* 右列:获取 Key */}
           <div>
             {/* 标签行固定 h-5:与左列标签行等高,保证两侧控件顶边严格对齐 */}
-            <p className="flex items-center h-5 text-sm font-medium text-ink-2 mb-1.5">还没有 API Key？</p>
+            <p className="flex items-center h-5 text-sm font-medium text-ink-2 mb-1.5">{tr('settings.noApiKeyYet')}</p>
 
             {/* 与左侧输入框同款同高,整块可点去注册 */}
             <button
               type="button"
               onClick={() => openExternalLink(REGISTER_URL)}
-              title="在浏览器中打开 MiMo 平台注册页"
+              title={tr('settings.openRegisterTitle')}
               className="w-full h-[34px] px-3 rounded-sm bg-surface-2 border border-line text-sm text-ink flex items-center gap-2 cursor-pointer transition-all duration-100 ease-out hover:border-accent hover:bg-surface-hover group"
             >
               <span className="flex-1 text-left truncate">platform.xiaomimimo.com</span>
@@ -440,7 +459,7 @@ export function SettingsPanel() {
             </button>
 
             <div className="flex items-center gap-2 mt-2">
-              <span className="text-sm text-ink-2">邀请码</span>
+              <span className="text-sm text-ink-2">{tr('settings.inviteCode')}</span>
               <span className="font-mono text-sm font-semibold text-accent-2-text">{INVITE_CODE}</span>
               <CopyButton text={INVITE_CODE} />
             </div>
@@ -450,36 +469,36 @@ export function SettingsPanel() {
 
       {/* 数据存储 */}
       <section>
-        <SectionTitle>数据存储</SectionTitle>
+        <SectionTitle>{tr('settings.dataStorage')}</SectionTitle>
 
         <div className="mat-card p-3">
           <div className="flex items-center justify-between gap-2 mb-1">
-            <p className="text-xs text-ink-3">当前数据目录</p>
+            <p className="text-xs text-ink-3">{tr('settings.currentDataDir')}</p>
             {dirInfo?.isCustom && (
-              <span className="text-xs px-1.5 py-px rounded-full bg-accent-soft text-accent">自定义</span>
+              <span className="text-xs px-1.5 py-px rounded-full bg-accent-soft text-accent">{tr('settings.customDir')}</span>
             )}
           </div>
-          <p className="text-sm text-ink break-all">{dirInfo?.current ?? '读取中…'}</p>
+          <p className="text-sm text-ink break-all">{dirInfo?.current ?? tr('settings.dirLoading')}</p>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap mt-3">
           <Button variant="secondary" size="sm" icon={<FolderOpen size={14} />} onClick={handleSelectDir}>
-            选择目录
+            {tr('settings.selectDir')}
           </Button>
           <Button variant="secondary" size="sm" loading={migrating} disabled={!selectedDir} onClick={handleMigrate}>
-            迁移到所选目录
+            {tr('settings.migrateToDir')}
           </Button>
           <Button variant="ghost" size="sm" icon={<RotateCcw size={14} />} onClick={handleResetDir}>
-            恢复默认
+            {tr('settings.resetDir')}
           </Button>
         </div>
 
         <div className="mt-2 space-y-1">
           {selectedDir && dirInfo && selectedDir !== dirInfo.current && (
-            <p className="text-xs text-accent break-all">将迁移到：{selectedDir}</p>
+            <p className="text-xs text-accent break-all">{tr('settings.willMigrateTo', { dir: selectedDir })}</p>
           )}
           {dirInfo && !dirInfo.isCustom && (
-            <Hint>默认位于「文档 / YiziVoice /」，支持整体迁移</Hint>
+            <Hint>{tr('settings.defaultDirHint')}</Hint>
           )}
         </div>
       </section>
@@ -487,13 +506,13 @@ export function SettingsPanel() {
       <Dialog
         open={clearKeyOpen}
         onClose={() => setClearKeyOpen(false)}
-        title="清除 API Key"
-        subtitle="清除后需要重新输入 Key 才能继续使用语音功能。"
+        title={tr('settings.clearKeyTitle')}
+        subtitle={tr('settings.clearKeySubtitle')}
         width={360}
         footer={
           <>
-            <Button variant="secondary" onClick={() => setClearKeyOpen(false)}>取消</Button>
-            <Button variant="danger" onClick={handleClearKey}>确认清除</Button>
+            <Button variant="secondary" onClick={() => setClearKeyOpen(false)}>{tr('common.cancel')}</Button>
+            <Button variant="danger" onClick={handleClearKey}>{tr('settings.clearKeyConfirm')}</Button>
           </>
         }
       />

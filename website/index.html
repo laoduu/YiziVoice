@@ -69,6 +69,19 @@
       transition: transform .2s, background .2s, box-shadow .2s;
     }
     .nav-cta:hover { background: var(--blue-deep); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,47,167,0.4); }
+    /* 右侧动作组:GitHub 图标 + 下载按钮,保持整体贴右 */
+    .nav-actions { display: flex; align-items: center; gap: 12px; }
+    .nav-github {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 50%;
+      color: var(--ink-soft); background: rgba(255,255,255,0.65);
+      border: 1px solid var(--line);
+      transition: color .18s, background .18s, transform .18s, box-shadow .18s;
+    }
+    .nav-github:hover {
+      color: var(--blue); background: #fff; transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(0,47,167,0.18);
+    }
     .nav-burger { display: none; background: none; border: none; cursor: pointer; color: var(--ink); }
     .nav-burger svg { display: block; }
 
@@ -431,6 +444,7 @@
     @media (max-width: 640px) {
       .nav-links, .nav-cta { display: none; }
       .nav-burger { display: block; }
+      .nav-actions { gap: 8px; }
       .hero { padding: 56px 0 28px; }
       .hero-sub { font-size: 1rem; max-width: 100%; }
       .hero-actions .btn { width: 100%; justify-content: center; }
@@ -467,7 +481,12 @@
         <li><a href="#changelog">更新日志</a></li>
         <li><a href="#faq">常见问题</a></li>
       </ul>
-      <a class="nav-cta" href="#download">免费下载</a>
+      <div class="nav-actions">
+        <a class="nav-github" href="https://github.com/laoduu/YiziVoice" target="_blank" rel="noopener" aria-label="GitHub 仓库" title="GitHub 仓库">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 2.87-.39c.97 0 1.95.13 2.87.39 2.18-1.49 3.14-1.18 3.14-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.26 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.2.67.8.56A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+        </a>
+        <a class="nav-cta" href="#download">免费下载</a>
+      </div>
       <button class="nav-burger" aria-label="菜单" onclick="this.closest('.nav').querySelector('.nav-links').classList.toggle('open')">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
       </button>

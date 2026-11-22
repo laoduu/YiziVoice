@@ -1,0 +1,47 @@
+name: CI
+
+# 日常门禁:类型检查 + CSP 一致性 + 视觉规范 + 前端构建 + Rust 编译检查。
+# 这些检查在本地 dev 环境都跑得动,但"打包态才暴露"的问题要靠 Release 工作流的产物冒烟来兜
+# (见 HEARTBEAT.md「发版清单」)。
+# 视觉规范只能查静态可判定项(任意值/字重/文字色/图标档位);渲染结果(签名数、对比度、
+# 溢出)依赖浏览器,按 DESIGN.md §9.2 在生产构建上实测,不进 CI。
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: 'src-tauri -> target'
+
+      - run: npm ci
+
+      - name: TypeScript 类型检查
+        run: npx tsc --noEmit
+
+      - name: CSP 白名单一致性
+        run: npm run csp:check
+
+      - name: 视觉规范（DESIGN.md v4）静态门禁
+        run: npm run design:check
+
+      - name: 前端构建
+        run: npm run build
+
+      - name: Rust 编译检查 + 单元测试
+        run: cargo test --manifest-path src-tauri/Cargo.toml

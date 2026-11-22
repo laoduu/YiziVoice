@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Agent internal config
+.mimocode/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# Local / machine-specific config
+*.local
+
+# Local visual-review screenshots (captured to a file for a human to look at; the
+# agent cannot read images, so these are never a build input)
+.review/
+
+# App runtime data created when document_dir resolves to a relative fallback (paths.rs) - never commit
+/YiziVoice/

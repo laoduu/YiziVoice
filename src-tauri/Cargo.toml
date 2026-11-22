@@ -1,0 +1,35 @@
+[package]
+name = "yizivoice"
+version = "2.1.4"
+description = "YiziVoice - a free, cross-platform AI voice studio (TTS / voice clone / ASR) powered by MiMo models"
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/laoduu/YiziVoice"
+
+[lib]
+name = "yizivoice_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+serde_json = "1"
+base64 = "0.22"
+keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
+
+# Linux 专用:直接操作底层 WebKitGTK 视图。wry 只开了 WebGL/WebAudio,
+# 既没有 set_enable_media_stream 也没接 permission-request 信号,
+# 于是 getUserMedia 被静默拒绝(不弹授权、录音直接无效)。见 linux_media.rs。
+[target.'cfg(target_os = "linux")'.dependencies]
+webkit2gtk = "2"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+strip = true
+panic = "abort"

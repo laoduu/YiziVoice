@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "lastUpdated": 1781954101661,
+  "voices": [
+    {
+      "id": "import_1781948866381_eurl8s",
+      "name": "思思",
+      "category": "女声",
+      "description": "",
+      "filePath": "import_1781948866381_eurl8s.json",
+      "createdAt": 1781948866381,
+      "previewAvailable": true
+    },
+    {
+      "id": "import_1781948866381_e70sge",
+      "name": "急吼吼的女生",
+      "category": "女声",
+      "description": "",
+      "filePath": "import_1781948866381_e70sge.json",
+      "createdAt": 1781948866381,
+      "previewAvailable": true
+    },
+    {
+      "id": "import_1781948866381_1usk17",
+      "name": "分享者女生",
+      "category": "女声",
+      "description": "",
+      "filePath": "import_1781948866381_1usk17.json",
+      "createdAt": 1781948866381,
+      "previewAvailable": true
+    },
+    {
+      "id": "import_1781948866381_kkzdwu",
+      "name": "清新",
+      "category": "女声",
+      "description": "",
+      "filePath": "import_1781948866381_kkzdwu.json",
+      "createdAt": 1781948866381,
+      "previewAvailable": true
+    },
+    {
+      "id": "1781948937128",
+      "name": "醇厚旁白",
+      "category": "男声",
+      "description": "",
+      "filePath": "1781948937128.json",
+      "createdAt": 1781948937128,
+      "previewAvailable": true
+    },
+    {
+      "id": "1781950658098",
+      "name": "玲玲姐",
+      "category": "角色扮演",
+      "description": "",
+      "filePath": "1781950658098.json",
+      "createdAt": 1781950658098,
+      "previewAvailable": true
+    },
+    {
+      "id": "1781950837730",
+      "name": "山山大叔",
+      "category": "角色扮演",
+      "description": "",
+      "filePath": "1781950837730.json",
+      "createdAt": 1781950837730,
+      "previewAvailable": true
+    },
+    {
+      "id": "1781950997309",
+      "name": "磁性男声（英文）",
+      "category": "男声",
+      "description": "",
+      "filePath": "1781950997309.json",
+      "createdAt": 1781950997309,
+      "previewAvailable": true
+    }
+  ]
+}

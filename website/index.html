@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YiziVoice — 面向内容创作者的一站式 AI 语音工具</title>
+  <meta name="description" content="YiziVoice 基于小米 MiMo-V2.5-TTS 系列模型，为内容创作者提供语音克隆、文字设计音色、文字转语音（TTS）、语音转文字（ASR）一站式能力，覆盖短视频、有声书、播客、游戏配音等场景。">
+  <link rel="icon" href="favicon.ico">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #E8F4FD;            /* 婴儿蓝 */
+      --bg-soft: #F4FAFF;
+      --bg-deep: #D9ECFB;
+      --ink: #10264E;           /* 深蓝黑文字 */
+      --ink-soft: #3E5578;
+      --ink-dim: #6A7F9E;
+      --blue: #002FA7;          /* 克莱因蓝 */
+      --blue-deep: #00248A;
+      --orange: #F37021;        /* 爱马仕橙 */
+      --orange-deep: #D95E12;
+      --white: #FFFFFF;
+      --line: rgba(16,38,78,0.10);
+      --line-strong: rgba(0,47,167,0.28);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --shadow: 0 16px 48px rgba(16,38,78,0.10);
+      --shadow-sm: 0 6px 20px rgba(16,38,78,0.08);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'MiSans', sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    a { color: var(--blue); text-decoration: none; transition: color .2s; }
+    a:hover { color: var(--orange); }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+    /* ─── Nav ─── */
+    .nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(232,244,253,0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--line);
+    }
+    .nav-inner {
+      max-width: 1120px; margin: 0 auto; padding: 0 24px;
+      height: 62px; display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.15rem; color: var(--ink); letter-spacing: -0.01em; }
+    .brand-text .b-yizi { color: var(--blue); }
+    .brand-text .b-voice { color: var(--orange); }
+    .nav-brand .logo-img {
+      width: 30px; height: 30px; display: block;
+      filter: drop-shadow(0 4px 12px rgba(0,47,167,0.35));
+    }
+    .nav-links { display: flex; align-items: center; gap: 30px; list-style: none; }
+    .nav-links a { font-size: .92rem; color: var(--ink-soft); font-weight: 500; }
+    .nav-links a:hover { color: var(--blue); }
+    .nav-cta {
+      padding: 9px 20px; border-radius: 999px; font-size: .9rem; font-weight: 600;
+      background: var(--blue); color: #fff !important;
+      box-shadow: 0 6px 16px rgba(0,47,167,0.30);
+      transition: transform .2s, background .2s, box-shadow .2s;
+    }
+    .nav-cta:hover { background: var(--blue-deep); transform: translateY(-1px); box-shadow: 0 8px 20px rgba(0,47,167,0.4); }
+    .nav-burger { display: none; background: none; border: none; cursor: pointer; color: var(--ink); }
+    .nav-burger svg { display: block; }
+
+    /* ─── Hero ─── */
+    .hero {
+      position: relative; overflow: hidden;
+      padding: 90px 0 40px;
+      background:
+        radial-gradient(60% 60% at 85% 10%, rgba(0,47,167,0.10), transparent 60%),
+        radial-gradient(50% 50% at 8% 90%, rgba(243,112,33,0.12), transparent 60%),
+        linear-gradient(180deg, #EAF5FF 0%, #E8F4FD 55%, #F2F8FF 100%);
+    }
+    .hero-grid {
+      display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 48px; align-items: center;
+    }
+    .hero-grid > * { min-width: 0; }
+    .hero-eyebrow {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 14px; border-radius: 999px; font-size: .82rem; font-weight: 600;
+      color: var(--blue); background: rgba(0,47,167,0.08);
+      border: 1px solid var(--line-strong); margin-bottom: 22px;
+    }
+    .hero-eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--orange); animation: pulse 1.8s ease-in-out infinite; }
+    .hero h1 {
+      font-size: clamp(2.2rem, 5vw, 3.4rem); line-height: 1.12; letter-spacing: -0.02em; font-weight: 800;
+      color: var(--ink);
+    }
+    .hero h1 .grad {
+      background: linear-gradient(100deg, var(--blue) 10%, #2452d6 45%, var(--orange) 100%);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-sub { margin-top: 22px; font-size: 1.12rem; color: var(--ink-soft); max-width: 520px; overflow-wrap: break-word; word-break: break-word; }
+    .hero-sub, .hero p, .hero h1 { max-width: 100%; overflow-wrap: anywhere; }
+    .hero-actions { margin-top: 34px; display: flex; gap: 14px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 13px 26px; border-radius: 999px; font-size: .98rem; font-weight: 600;
+      transition: transform .2s, background .2s, box-shadow .2s, color .2s;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--blue); color: #fff; box-shadow: 0 10px 24px rgba(0,47,167,0.32); }
+    .btn-primary:hover { background: var(--blue-deep); transform: translateY(-2px); box-shadow: 0 14px 30px rgba(0,47,167,0.42); color: #fff; }
+    .btn-ghost { background: var(--white); color: var(--blue); border: 1px solid var(--line-strong); }
+    .btn-ghost:hover { border-color: var(--orange); color: var(--orange); transform: translateY(-2px); }
+
+    .hero-stats { margin-top: 44px; display: flex; gap: 40px; flex-wrap: wrap; }
+    .hero-stat b { display: block; font-size: 1.7rem; font-weight: 800; color: var(--ink); letter-spacing: -0.02em; }
+    .hero-stat b i { font-style: normal; color: var(--orange); }
+    .hero-stat span { font-size: .86rem; color: var(--ink-dim); }
+
+    /* Hero visual — waveform + glass cards */
+    .hero-visual { position: relative; display: grid; place-items: center; min-height: 320px; }
+    .hero-visual::before {
+      content: ''; position: absolute; inset: 6% 2%; border-radius: 40%;
+      background:
+        radial-gradient(45% 55% at 30% 35%, rgba(0,47,167,0.16), transparent 70%),
+        radial-gradient(45% 55% at 72% 60%, rgba(243,112,33,0.18), transparent 70%),
+        radial-gradient(40% 45% at 50% 90%, rgba(18,137,155,0.14), transparent 70%);
+      filter: blur(6px);
+    }
+    .wave-stage {
+      position: relative; width: 260px; height: 180px;
+      display: grid; place-items: center;
+    }
+    .wave {
+      display: flex; align-items: center; gap: 6px; height: 120px;
+    }
+    .wave span {
+      width: 6px; border-radius: 999px;
+      background: linear-gradient(to top, var(--orange), var(--blue));
+    }
+    .glass-card {
+      position: absolute; padding: 16px 18px; border-radius: 18px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.55), rgba(255,255,255,0.18));
+      backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
+      border: 1px solid rgba(255,255,255,0.65);
+      border-top: 1px solid rgba(255,255,255,0.9);
+      box-shadow: 0 18px 44px rgba(16,38,78,0.16), inset 0 1px 1px rgba(255,255,255,0.6);
+      font-size: .82rem; color: var(--ink-soft);
+      width: 200px;
+    }
+    .glass-card .tag {
+      display: block; width: max-content; padding: 2px 9px; border-radius: 999px; font-size: .72rem; font-weight: 700;
+      color: #fff; margin-bottom: 8px;
+    }
+    .glass-card .desc { display: block; line-height: 1.5; overflow-wrap: break-word; }
+    .glass-card .desc-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .glass-card .desc-row .desc { flex: 1; }
+    .glass-card .play-btn {
+      flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+      display: grid; place-items: center; color: var(--blue);
+      background: rgba(0,47,167,0.10); border: 1px solid rgba(0,47,167,0.25);
+      cursor: pointer; transition: background .2s, transform .2s;
+    }
+    .glass-card .play-btn:hover { background: rgba(0,47,167,0.18); transform: scale(1.08); }
+    .glass-card .play-btn:active { transform: scale(.95); }
+    .glass-card .tag.t-blue { background: var(--blue); }
+    .glass-card .tag.t-orange { background: var(--orange); }
+    .glass-card .tag.t-teal { background: #12899b; }
+    .glass-card .bar { height: 6px; border-radius: 999px; background: rgba(16,38,78,0.08); overflow: hidden; margin-top: 10px; }
+    .glass-card .bar i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, var(--blue), var(--orange)); }
+    .glass-card.gc1 { top: 22%; right: 0; animation: floaty 6s ease-in-out infinite; }
+    .glass-card.gc1 .desc { white-space: nowrap; }
+    .glass-card.gc2 { top: 4%; left: 0; animation: floaty 6s ease-in-out .8s infinite; }
+    .glass-card.gc3 { bottom: 4%; left: 4%; animation: floaty 6s ease-in-out 1.6s infinite; }
+
+    /* ─── Sections ─── */
+    .section { padding: 84px 0; }
+    .section-alt { background: var(--bg-soft); }
+    .section-head { text-align: center; max-width: 640px; margin: 0 auto 52px; }
+    .section-eyebrow { font-size: .84rem; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--orange); margin-bottom: 12px; }
+    .section-head h2 { font-size: clamp(1.7rem, 3.6vw, 2.5rem); font-weight: 800; letter-spacing: -0.02em; color: var(--ink); }
+    .section-head p { margin-top: 14px; color: var(--ink-soft); font-size: 1.04rem; }
+
+    /* Features */
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .feature {
+      padding: 30px 26px; border-radius: var(--radius); background: var(--white);
+      border: 1px solid var(--line); transition: transform .3s, box-shadow .3s, border-color .3s;
+    }
+    .feature:hover { transform: translateY(-5px); box-shadow: var(--shadow); border-color: var(--line-strong); }
+    .feature-icon {
+      width: 52px; height: 52px; border-radius: 14px; display: grid; place-items: center; margin-bottom: 18px;
+    }
+    .feature-icon svg { width: 26px; height: 26px; }
+    .feature h3 { font-size: 1.12rem; font-weight: 700; margin-bottom: 8px; color: var(--ink); }
+    .feature p { font-size: .93rem; color: var(--ink-soft); line-height: 1.65; }
+
+    /* Feature visual (code-generated animation area) */
+    .f-visual { height: 92px; border-radius: 12px; margin-bottom: 18px; display: grid; place-items: center; overflow: hidden; position: relative; }
+    .f-wave { display: flex; align-items: center; gap: 3px; height: 40px; }
+    .f-wave i { width: 4px; border-radius: 999px; display: block; }
+    .f-pulse-ring { position: absolute; width: 54px; height: 54px; border-radius: 50%; border: 2px solid; animation: ringExpand 2.2s ease-out infinite; }
+    .f-spin-dots { position: relative; width: 60px; height: 60px; animation: spin 16s linear infinite; }
+    .f-spin-dots span { position: absolute; width: 9px; height: 9px; border-radius: 50%; }
+    .f-capsule { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+    .f-capsule span { font-size: .72rem; font-weight: 600; padding: 4px 11px; border-radius: 999px; animation: tagFloat 3.5s ease-in-out infinite; }
+    .f-timeline { position: relative; width: 140px; height: 64px; }
+    .f-timeline::before { content: ''; position: absolute; left: 16px; top: 6px; bottom: 6px; width: 2px; background: rgba(18,137,155,0.2); border-radius: 2px; }
+    .f-timeline .row { position: absolute; left: 30px; height: 8px; border-radius: 999px; overflow: hidden; }
+    .f-timeline .row i { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #12899b, #0ea5e9); transform-origin: left; animation: rowGrow 2.4s ease-in-out infinite; }
+    .f-timeline .dot { position: absolute; left: 9px; width: 14px; height: 14px; border-radius: 50%; display: grid; place-items: center; animation: dotPulse 2.4s ease-in-out infinite; }
+    .f-timeline .dot::after { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #fff; }
+    @keyframes rowGrow { 0% { transform: scaleX(0); opacity: .3; } 40% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(1); opacity: 1; } }
+    @keyframes dotPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(18,137,155,0.4); } 50% { box-shadow: 0 0 0 6px rgba(18,137,155,0); } }
+    @keyframes ringExpand { 0% { transform: scale(0.5); opacity: 0.7; } 100% { transform: scale(1.6); opacity: 0; } }
+    @keyframes tagFloat { 0%,100% { transform: translateY(0); opacity: .8; } 50% { transform: translateY(-4px); opacity: 1; } }
+
+    /* Workflow */
+    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: step; }
+    .step {
+      position: relative; padding: 28px 24px 26px; border-radius: var(--radius);
+      background: var(--white); border: 1px solid var(--line);
+    }
+    .step .num {
+      width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center;
+      font-weight: 800; font-size: 1.1rem; color: #fff; margin-bottom: 16px;
+    }
+    .step:nth-child(1) .num { background: var(--blue); }
+    .step:nth-child(2) .num { background: #2452d6; }
+    .step:nth-child(3) .num { background: var(--orange); }
+    .step h3 { font-size: 1.06rem; font-weight: 700; margin-bottom: 8px; }
+    .step p { font-size: .9rem; color: var(--ink-soft); }
+    .step-visual { height: 84px; border-radius: 12px; margin-bottom: 16px; display: grid; place-items: center; overflow: hidden; position: relative; }
+    .step-visual .track { position: relative; width: 78%; height: 3px; border-radius: 3px; background: rgba(16,38,78,0.12); }
+    .step-visual .track i { position: absolute; left: 0; top: 0; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--blue), var(--orange)); animation: trackFill 3s ease-in-out infinite; }
+    .step-visual .node { position: absolute; width: 12px; height: 12px; border-radius: 50%; top: 50%; transform: translateY(-50%); animation: nodePulse 2s ease-in-out infinite; }
+    .step-visual .icon { display: grid; place-items: center; }
+    .step-visual .icon svg { width: 40px; height: 40px; }
+    @keyframes trackFill { 0% { width: 0%; opacity: .4; } 50% { width: 100%; opacity: 1; } 100% { width: 100%; opacity: .4; } }
+    @keyframes nodePulse { 0%,100% { box-shadow: 0 0 0 0 rgba(0,47,167,0.35); } 50% { box-shadow: 0 0 0 7px rgba(0,47,167,0); } }
+    .s-visual { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .s-mic { position: relative; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; color: #fff; animation: sFloat 3.2s ease-in-out infinite; box-shadow: 0 8px 22px rgba(16,38,78,0.2); }
+    .s-mic::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.5); animation: sHalo 2.6s ease-out infinite; }
+    .s-wave { display: flex; align-items: center; gap: 3px; height: 26px; }
+    .s-wave i { width: 4px; border-radius: 999px; display: block; }
+    @keyframes sFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+    @keyframes sHalo { 0% { transform: scale(0.85); opacity: 0.7; } 100% { transform: scale(1.5); opacity: 0; } }
+
+    /* Voices */
+    .voices { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .voice {
+      padding: 22px 16px; text-align: center; border-radius: var(--radius-sm);
+      background: var(--white); border: 1px solid var(--line); transition: transform .25s, box-shadow .25s;
+    }
+    .voice:hover { transform: translateY(-4px); box-shadow: var(--shadow-sm); }
+    .voice .avatar {
+      width: 54px; height: 54px; border-radius: 50%; margin: 0 auto 12px; display: grid; place-items: center;
+      font-size: 1.4rem;
+    }
+    .voice .name { font-weight: 700; color: var(--ink); }
+    .voice .meta { font-size: .8rem; color: var(--ink-dim); margin-top: 3px; }
+
+    /* Changelog */
+    .changelog { max-width: 760px; margin: 0 auto; }
+    .cl-tabs { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 24px; }
+    .cl-tab {
+      padding: 8px 20px; border-radius: 999px; font-size: .9rem; font-weight: 600;
+      border: 1px solid var(--line-strong); background: var(--white); color: var(--ink-soft);
+      cursor: pointer; transition: background .2s, color .2s, border-color .2s, box-shadow .2s, transform .2s;
+    }
+    .cl-tab:hover { color: var(--blue); border-color: var(--blue); transform: translateY(-1px); }
+    .cl-tab.active { background: var(--blue); color: #fff; border-color: var(--blue); box-shadow: 0 6px 18px rgba(0,47,167,0.28); }
+    .cl-tab.active:hover { color: #fff; }
+    .cl-card {
+      background: var(--white); border: 1px solid var(--line); border-radius: 24px;
+      padding: 32px 34px; box-shadow: var(--shadow-sm);
+    }
+    .cl-card-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding-bottom: 18px; border-bottom: 1px solid var(--line); margin-bottom: 20px; }
+    .cl-version { font-size: 1.5rem; font-weight: 800; color: var(--ink); letter-spacing: -0.01em; }
+    .cl-latest-tag { font-size: .74rem; font-weight: 700; color: #fff; background: var(--orange); padding: 3px 11px; border-radius: 999px; letter-spacing: .06em; }
+    .tag-mini { display: inline-block; font-size: .68rem; font-weight: 700; color: #fff; background: var(--orange); padding: 2px 8px; border-radius: 999px; letter-spacing: .04em; vertical-align: middle; margin-left: 6px; line-height: 1.4; }
+    .cl-date { font-size: .86rem; color: var(--ink-dim); margin-left: auto; }
+    .cl-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 13px; }
+    .cl-list li { position: relative; padding-left: 24px; font-size: .95rem; color: var(--ink-soft); line-height: 1.7; }
+    .cl-list li::before { content: ''; position: absolute; left: 2px; top: .58em; width: 8px; height: 8px; border-radius: 50%; }
+    .cl-list li.add::before { background: var(--orange); }
+    .cl-list li.fix::before { background: #12899b; }
+    .cl-list li.opt::before { background: var(--blue); }
+
+    /* FAQ */
+    .faq { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+    .faq-item {
+      background: var(--white); border: 1px solid var(--line); border-radius: var(--radius-sm);
+      padding: 22px 24px; transition: border-color .25s, box-shadow .25s;
+    }
+    .faq-item:hover { border-color: var(--line-strong); box-shadow: var(--shadow-sm); }
+    .faq-item h3 { font-size: 1.02rem; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+    .faq-item p { font-size: .93rem; color: var(--ink-soft); }
+
+    /* CTA */
+    .cta {
+      border-radius: 28px; padding: 64px 40px; text-align: center; color: #fff; position: relative; overflow: hidden;
+      background: linear-gradient(120deg, var(--blue) 0%, #2452d6 55%, #3f63e0 100%);
+    }
+    .cta::before {
+      content: ''; position: absolute; inset: -40%; pointer-events: none;
+      background: radial-gradient(40% 40% at 20% 20%, rgba(243,112,33,0.5), transparent 60%),
+                  radial-gradient(40% 40% at 80% 80%, rgba(255,255,255,0.25), transparent 60%);
+      animation: spin 40s linear infinite;
+    }
+    .cta h2 { font-size: clamp(1.7rem, 3.6vw, 2.4rem); font-weight: 800; letter-spacing: -0.02em; position: relative; }
+    .cta p { margin: 14px auto 0; font-size: 1.05rem; color: rgba(255,255,255,0.85); max-width: 480px; position: relative; }
+    .cta .btn { position: relative; margin-top: 30px; background: #fff; color: var(--blue); }
+    .cta .btn:hover { background: #f0f4ff; color: var(--blue); }
+    .cta .cta-code {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: max-content; margin: 22px auto 0;
+      padding: 8px 8px 8px 16px; border-radius: 999px;
+      background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.4);
+      cursor: pointer; user-select: none;
+      transition: background .2s, transform .2s, border-color .2s, box-shadow .2s;
+    }
+    .cta .cta-code:hover { background: rgba(255,255,255,0.24); transform: translateY(-1px); border-color: rgba(255,255,255,0.65); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+    .cta .cta-code:active { transform: scale(.97); }
+    .cta .cta-code-label { font-size: .84rem; color: rgba(255,255,255,0.82); }
+    .cta .cta-code-value {
+      font-weight: 800; font-size: 1.05rem; letter-spacing: .14em; color: #fff;
+      padding: 3px 14px; border-radius: 999px; background: rgba(0,0,0,0.22);
+    }
+    .cta .cta-code-copy {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 6px 16px; border-radius: 999px; font-size: .84rem; font-weight: 700;
+      background: var(--orange); color: #fff; white-space: nowrap;
+      transition: background .2s, transform .2s, box-shadow .2s;
+    }
+    .cta .cta-code-copy:hover { background: var(--orange-deep); box-shadow: 0 6px 16px rgba(243,112,33,0.4); }
+    .cta .cta-code-copy:active { transform: scale(.96); }
+
+    /* CTA download card (sources side by side) */
+    .cta-card {
+      position: relative;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;
+      max-width: 980px; margin: 30px auto 0;
+    }
+    .cta-card .cta-source {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 14px; padding: 24px 18px 20px;
+      background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.32);
+      border-radius: 20px;
+      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      transition: background .2s, transform .2s, border-color .2s, box-shadow .2s;
+    }
+    .cta-card .cta-source:hover {
+      background: rgba(255,255,255,0.16); border-color: rgba(255,255,255,0.55);
+      transform: translateY(-2px); box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+    }
+    .cta-card .btn { margin: 0; background: #fff; color: var(--blue); white-space: nowrap; }
+    .cta-card .btn:hover { background: #f0f4ff; color: var(--blue); }
+    .cta-card .cta-platform { margin: -6px 0 0; font-size: .8rem; color: rgba(255,255,255,0.75); }
+    .cta-card .cta-code { margin: 0; }
+
+    /* Footer */
+    .footer { padding: 40px 0 48px; border-top: 1px solid var(--line); }
+    .footer-inner {
+      max-width: 1120px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--ink); }
+    .footer-brand .logo-img { width: 24px; height: 24px; display: block; }
+    .footer p { font-size: .85rem; color: var(--ink-dim); }
+    .footer-links { display: flex; gap: 22px; }
+    .footer-links a { font-size: .88rem; color: var(--ink-soft); }
+
+    /* Scroll reveal */
+    [data-reveal] {
+      opacity: 0; transform: translateY(46px); filter: blur(6px);
+      transition: opacity .8s cubic-bezier(.22,1,.36,1), transform .8s cubic-bezier(.22,1,.36,1), filter .8s ease;
+      will-change: transform, opacity, filter;
+    }
+    [data-reveal="left"] { transform: translateX(-46px); }
+    [data-reveal="right"] { transform: translateX(46px); }
+    [data-reveal="zoom"] { transform: scale(.88); }
+    [data-reveal].revealed { opacity: 1; transform: none; filter: blur(0); }
+
+    /* Hero entrance */
+    .hero [data-hero-anim] { opacity: 0; animation: riseIn .9s cubic-bezier(.22,1,.36,1) forwards; will-change: transform, opacity, filter; }
+    .hero .hero-eyebrow { animation-delay: .05s; }
+    .hero h1 { animation-delay: .15s; }
+    .hero-sub { animation-delay: .28s; }
+    .hero-actions { animation-delay: .42s; }
+    .hero-stats { animation-delay: .56s; }
+    .hero-visual { animation-delay: .3s; }
+    @keyframes riseIn { from { opacity: 0; transform: translateY(34px); filter: blur(6px); } to { opacity: 1; transform: none; filter: blur(0); } }
+
+    /* Animations */
+    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .4; transform: scale(.8); } }
+    @keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+    @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+    @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .hero-grid { grid-template-columns: 1fr; gap: 40px; }
+      .hero-visual { order: -1; }
+      .features, .steps { grid-template-columns: 1fr 1fr; }
+      .voices { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .nav-links, .nav-cta { display: none; }
+      .nav-burger { display: block; }
+      .hero { padding: 56px 0 28px; }
+      .hero-sub { font-size: 1rem; max-width: 100%; }
+      .hero-actions .btn { width: 100%; justify-content: center; }
+      .hero-stats { gap: 24px; }
+      .wave-stage { width: 200px; height: 140px; }
+      .glass-card { display: none; }
+      .section { padding: 60px 0; }
+      .features, .steps { grid-template-columns: 1fr; }
+      .voices { grid-template-columns: repeat(2, 1fr); }
+      .cta { padding: 48px 22px; }
+      .cta-card { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; }
+      html { scroll-behavior: auto; }
+      [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nav -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="nav-brand" href="#top">
+        <img class="logo-img" src="logo.svg" alt="YiziVoice logo">
+        <span class="brand-text"><span class="b-yizi">Yizi</span><span class="b-voice">Voice</span></span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="#features">核心功能</a></li>
+        <li><a href="#how">使用流程</a></li>
+        <li><a href="#voices">预置音色</a></li>
+        <li><a href="#changelog">更新日志</a></li>
+        <li><a href="#faq">常见问题</a></li>
+      </ul>
+      <a class="nav-cta" href="#download">免费下载</a>
+      <button class="nav-burger" aria-label="菜单" onclick="this.closest('.nav').querySelector('.nav-links').classList.toggle('open')">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+      </button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero" id="top">
+    <div class="wrap hero-grid">
+      <div>
+        <span class="hero-eyebrow" data-hero-anim><span class="dot"></span> 基于小米 MiMo-V2.5-TTS 大模型</span>
+        <h1 data-hero-anim>把文字，<br><span class="grad">变成有温度的声音</span></h1>
+        <p class="hero-sub" data-hero-anim>为内容创作者打造的一站式 AI 语音工具 —— 语音克隆、文字设计音色、文生音、音转文，让每个角色都能开口说话。</p>
+        <div class="hero-actions" data-hero-anim>
+          <a class="btn btn-primary" href="#download">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            免费下载 Windows / macOS / Linux 版
+          </a>
+          <a class="btn btn-ghost" href="#features">了解功能</a>
+        </div>
+        <div class="hero-stats" data-hero-anim>
+          <div class="hero-stat"><b>9</b><span>预置音色</span></div>
+          <div class="hero-stat"><b>12</b><span>情感风格</span></div>
+          <div class="hero-stat"><b>4<i>in1</i></b><span>TTS · 克隆 · 设计 · ASR</span></div>
+        </div>
+      </div>
+
+      <div class="hero-visual" data-hero-anim>
+        <div class="wave-stage">
+          <div class="wave" id="wave">
+            <script>document.getElementById('wave').innerHTML = Array.from({length: 18}, (_, i) =>
+              '<span style="height:' + Math.round(Math.max(24, Math.sin(i * 0.4) * 38 + 44)) + '%;animation:wavebar ' + (0.9 + i * 0.05) + 's ease-in-out ' + (i * 0.04) + 's infinite alternate"></span>'
+            ).join('');</script>
+          </div>
+        </div>
+
+        <div class="glass-card gc1">
+          <span class="tag t-blue">文生音</span>
+          <div class="desc-row">
+            <span class="desc">「你好，我是玲玲姐」</span>
+            <button class="play-btn" type="button" onclick="toggleLingPlay(this)" aria-label="播放声音">
+              <svg class="ic-play" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+              <svg class="ic-pause" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="display:none"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+            </button>
+          </div>
+          <div class="bar"><i style="width:72%"></i></div>
+          <audio id="lingAudio" src="lingling.wav" preload="none"></audio>
+        </div>
+        <div class="glass-card gc2">
+          <span class="tag t-orange">克隆音色</span>
+          <span class="desc">玲玲姐 · 女声 · 已保存</span>
+          <div class="bar"><i style="width:88%"></i></div>
+        </div>
+        <div class="glass-card gc3">
+          <span class="tag t-teal">音转文</span>
+          <span class="desc">自动识别 · 多语言+方言</span>
+          <div class="bar"><i style="width:55%"></i></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Features -->
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="section-eyebrow">核心功能</p>
+        <h2>一个工具，覆盖全部配音需求</h2>
+        <p>从克隆你的声音，到一键生成任意音频，再到把录音转成文字。</p>
+      </div>
+      <div class="features">
+        <div class="feature" data-reveal>
+          <div class="f-visual" style="background:rgba(243,112,33,0.07);position:relative">
+            <div class="f-pulse-ring" style="border-color:var(--orange)"></div>
+            <div class="f-pulse-ring" style="border-color:var(--orange);animation-delay:.8s"></div>
+            <div class="icon" style="display:grid;place-items:center">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#F37021" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+          </div>
+          <h3>音色克隆</h3>
+          <p>录一段或用文件提交 20 秒音频样本（文件也可以直接拖进来），即可复刻出专属音色角色，并支持分类管理、按需复用。</p>
+        </div>
+        <div class="feature" data-reveal>
+          <div class="f-visual" style="background:rgba(0,47,167,0.06)">
+            <div class="f-capsule">
+              <span style="background:rgba(0,47,167,0.10);color:#002FA7">三十岁女性</span>
+              <span style="background:rgba(243,112,33,0.12);color:#F37021;animation-delay:.5s">温柔清晰</span>
+              <span style="background:rgba(18,137,155,0.10);color:#12899b;animation-delay:1s">深夜电台</span>
+            </div>
+          </div>
+          <h3>AI 音色设计 <span class="tag-mini">新</span></h3>
+          <p>不用录音：描述年龄、音色质地、语速、情绪和使用场景，就能生成专属音色样本；AI 还可以一次生成音色描述与试听文本。</p>
+        </div>
+        <div class="feature" data-reveal>
+          <div class="f-visual" style="background:rgba(0,47,167,0.06)">
+            <div class="f-wave" id="fwave-tts"></div>
+          </div>
+          <h3>文生音 · TTS</h3>
+          <p>输入文案，选择音色（预置或克隆），一键生成自然流畅的语音，支持 12 种情感风格。</p>
+        </div>
+        <div class="feature" data-reveal>
+          <div class="f-visual" style="background:rgba(138,92,246,0.07)">
+            <div class="f-capsule">
+              <span style="background:rgba(0,47,167,0.10);color:#002FA7">标签方式</span>
+              <span style="background:rgba(243,112,33,0.12);color:#F37021;animation-delay:.5s">自由描述</span>
+              <span style="background:rgba(138,92,246,0.12);color:#8a5cf6;animation-delay:1s">导演演绎</span>
+            </div>
+          </div>
+          <h3>三种控制方式 <span class="tag-mini">新</span></h3>
+          <p>标签方式直接插音频标签，自由描述用一句话说明，导演演绎按「角色 / 场景 / 指导」三段填写 —— 一排三选一，选一次就能开写；AI 可一键扩写，内置示例秒填。</p>
+        </div>
+        <div class="feature" data-reveal>
+          <div class="f-visual" style="background:rgba(18,137,155,0.06)">
+            <div class="f-capsule">
+              <span style="background:rgba(18,137,155,0.10);color:#12899b">mimo-v2.6-flash</span>
+              <span style="background:rgba(0,47,167,0.10);color:#002FA7;animation-delay:.5s">获取模型</span>
+            </div>
+          </div>
+          <h3>可配置 AI 文本模型 <span class="tag-mini">新</span></h3>
+          <p>在设置中列出当前 Key 可用的文本模型并选择，默认 mimo-v2.6-flash；AI 生成风格描述与音色描述不再依赖已下线的旧模型。</p>
+        </div>
+        <div class="feature" data-reveal>
+          <div class="f-visual" style="background:rgba(18,137,155,0.06)">
+            <div class="f-wave" id="fwave-asr" style="gap:4px"></div>
+          </div>
+          <h3>音转文 · ASR</h3>
+          <p>录制或用文件导入音频，自动转文字，支持中文、英文及自动语言检测；录音一并保存，可回放、下载与复制。</p>
+        </div>
+        <div class="feature" data-reveal>
+          <div class="f-visual" style="background:rgba(0,47,167,0.06)">
+            <div class="f-spin-dots">
+              <span style="background:#002FA7;top:0;left:50%;margin-left:-4px"></span>
+              <span style="background:#F37021;top:50%;right:0;margin-top:-4px"></span>
+              <span style="background:#12899b;bottom:0;left:50%;margin-left:-4px"></span>
+              <span style="background:#8a5cf6;top:50%;left:0;margin-top:-4px"></span>
+            </div>
+          </div>
+          <h3>风格控制</h3>
+          <p>温柔、活泼、播音、磁性等 12 种预设风格，还可自定义标签并保存复用。</p>
+        </div>
+        <div class="feature" data-reveal>
+          <div class="f-visual" style="background:rgba(243,112,33,0.07)">
+            <div class="f-capsule">
+              <span style="background:rgba(243,112,33,0.12);color:#F37021">温柔</span>
+              <span style="background:rgba(0,47,167,0.10);color:#002FA7;animation-delay:.5s">活泼</span>
+              <span style="background:rgba(18,137,155,0.10);color:#12899b;animation-delay:1s">播音</span>
+              <span style="background:rgba(138,92,246,0.12);color:#8a5cf6;animation-delay:1.5s">磁性</span>
+            </div>
+          </div>
+          <h3>音频标签</h3>
+          <p>开场白标签与内嵌标签，覆盖常见配音场景，支持分类管理与自定义。</p>
+        </div>
+        <div class="feature" data-reveal>
+          <div class="f-visual" style="background:rgba(18,137,155,0.06)">
+            <div class="f-timeline">
+              <span class="dot" style="top:6px;background:#12899b;animation-delay:.1s"></span>
+              <span class="dot" style="top:26px;background:#0ea5e9;animation-delay:.9s"></span>
+              <span class="dot" style="top:46px;background:#8a5cf6;animation-delay:1.7s"></span>
+              <div class="row" style="top:6px;width:70%;animation-delay:.1s"><i></i></div>
+              <div class="row" style="top:26px;width:82%;animation-delay:.9s"><i></i></div>
+              <div class="row" style="top:46px;width:58%;animation-delay:1.7s"><i></i></div>
+            </div>
+          </div>
+          <h3>历史记录 <span class="tag-mini">新</span></h3>
+          <p>自动保存每次生成记录，随时回放与下载；点击即可回到生成时的完整状态，接着改、接着用。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="section section-alt" id="how">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="section-eyebrow">使用流程</p>
+        <h2>三步，让角色开口说话</h2>
+        <p>从克隆音色到生成成品，全程可视化，无需任何技术门槛。</p>
+      </div>
+      <div class="steps">
+        <div class="step" data-reveal>
+          <div class="step-visual" style="background:rgba(0,47,167,0.06)">
+            <div class="s-mic" style="background:linear-gradient(135deg,var(--blue),#2452d6)">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="17" x2="12" y2="22"/></svg>
+            </div>
+          </div>
+          <h3>提交音色样本</h3>
+          <p>录制或上传 20 秒内的语音样本，也可以直接用文字描述设计一个音色。</p>
+        </div>
+        <div class="step" data-reveal>
+          <div class="step-visual" style="background:rgba(0,47,167,0.04);position:relative">
+            <div class="track"><i></i></div>
+            <div class="node" style="background:#2452d6"></div>
+          </div>
+          <h3>保存音色角色</h3>
+          <p>试听复刻或设计效果，命名并分类保存，形成你的专属音色库。</p>
+        </div>
+        <div class="step" data-reveal>
+          <div class="step-visual" style="background:rgba(243,112,33,0.07)">
+            <div class="s-mic" style="background:linear-gradient(135deg,var(--orange),var(--orange-deep))">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </div>
+          </div>
+          <h3>文生音生成</h3>
+          <p>在文生音中选择音色与风格，输入文案，一键生成语音。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Voices -->
+  <section class="section" id="voices">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="section-eyebrow">预置音色</p>
+        <h2>开箱即用的音色库</h2>
+        <p>中英双语 9 种预置音色，配合克隆音色与文字设计音色，覆盖绝大部分配音场景。</p>
+      </div>
+      <div class="voices">
+        <div class="voice" data-reveal><div class="avatar" style="background:rgba(0,47,167,0.10)">🎵</div><div class="name">MiMo-默认</div><div class="meta">中文 · 女声</div></div>
+        <div class="voice" data-reveal><div class="avatar" style="background:rgba(243,112,33,0.12)">🍬</div><div class="name">冰糖</div><div class="meta">中文 · 女声</div></div>
+        <div class="voice" data-reveal><div class="avatar" style="background:rgba(255,183,197,0.3)">🌸</div><div class="name">茉莉</div><div class="meta">中文 · 女声</div></div>
+        <div class="voice" data-reveal><div class="avatar" style="background:rgba(18,137,155,0.12)">🧊</div><div class="name">苏打</div><div class="meta">中文 · 男声</div></div>
+        <div class="voice" data-reveal><div class="avatar" style="background:rgba(46,160,67,0.12)">🌿</div><div class="name">白桦</div><div class="meta">中文 · 男声</div></div>
+        <div class="voice" data-reveal><div class="avatar" style="background:rgba(0,47,167,0.10)">☀️</div><div class="name">Mia</div><div class="meta">英文 · 女声</div></div>
+        <div class="voice" data-reveal><div class="avatar" style="background:rgba(18,137,155,0.12)">🌊</div><div class="name">Chloe</div><div class="meta">英文 · 女声</div></div>
+        <div class="voice" data-reveal><div class="avatar" style="background:rgba(243,112,33,0.12)">⚡</div><div class="name">Milo</div><div class="meta">英文 · 男声</div></div>
+        <div class="voice" data-reveal><div class="avatar" style="background:rgba(138,92,246,0.12)">🎭</div><div class="name">Dean</div><div class="meta">英文 · 男声</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Changelog -->
+  <section class="section section-alt" id="changelog">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="section-eyebrow">更新日志</p>
+        <h2>看看每个版本的变化</h2>
+        <p>持续迭代，让 YiziVoice 越来越好用。</p>
+      </div>
+      <div class="changelog" data-reveal>
+        <div class="cl-tabs" id="clTabs">
+          <button class="cl-tab active" data-ver="v2.1.3" type="button">v2.1.3</button>
+          <button class="cl-tab" data-ver="v2.1.2" type="button">v2.1.2</button>
+          <button class="cl-tab" data-ver="v2.1.1" type="button">v2.1.1</button>
+          <button class="cl-tab" data-ver="v2.0.4" type="button">v2.0.4</button>
+          <button class="cl-tab" data-ver="v2.0.3" type="button">v2.0.3</button>
+          <button class="cl-tab" data-ver="v2.0.2" type="button">v2.0.2</button>
+          <button class="cl-tab" data-ver="v2.0.1" type="button">v2.0.1</button>
+          <button class="cl-tab" data-ver="v1.0.5" type="button">v1.0.5</button>
+          <button class="cl-tab" data-ver="v1.0.4" type="button">v1.0.4</button>
+        </div>
+        <div class="cl-card" id="clCard"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section" id="faq">
+    <div class="wrap">
+      <div class="section-head" data-reveal>
+        <p class="section-eyebrow">常见问题</p>
+        <h2>你可能想知道</h2>
+      </div>
+      <div class="faq">
+        <div class="faq-item" data-reveal><h3>YiziVoice 免费吗？</h3><p>工具本身完全免费，仅需在设置中填入自己的 MiMo API Key。MiMo-TTS 系列语音生成模型免费调用；MiMo-ASR 语音转文字模型与 MiMo-2.6 系列文本模型为付费模型，使用时需账户有余额。注册时填写邀请码，可额外获得 10 元体验金。</p></div>
+        <div class="faq-item" data-reveal><h3>支持哪些平台？</h3><p>提供 Windows、macOS 与 Linux（AMD64）桌面应用，推荐从 <a href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">GitHub Releases</a> 下载；页面底部另有网盘国内镜像。macOS 为未签名的 universal DMG，首次打开若被 Gatekeeper 拦截，右键选择「打开」或执行 <code>xattr -cr /Applications/YiziVoice.app</code> 即可。Linux 提供 deb 与 AppImage：deb 为推荐方式，<code>sudo dpkg -i YiziVoice_&lt;版本&gt;_amd64.deb</code>（或 <code>sudo apt install ./YiziVoice_&lt;版本&gt;_amd64.deb</code> 自动补依赖）；AppImage 下载后 <code>chmod +x</code> 即可运行，属实验性格式。</p></div>
+        <div class="faq-item" data-reveal><h3>克隆音色需要多长时间？</h3><p>录音 20 秒内的样本提交后，数秒即可完成复刻并生成预览，保存后即可在文生音中使用。</p></div>
+        <div class="faq-item" data-reveal><h3>我的数据安全吗？</h3><p>音色、风格、历史记录等项目数据只保存在你的本地文档目录，不上传到 YiziVoice 自有服务器。调用 MiMo API 生成/识别时，文本或音频样本会发送给小米 MiMo 用于处理；API Key 存放在系统钥匙串，不写入任何文件。</p></div>
+        <div class="faq-item" data-reveal><h3>升级后 API Key 为什么需要重填？</h3><p>v2.0.1 起 API Key 不再以明文保存在本地文件，而是加密存入系统钥匙串：Windows 使用凭据管理器（DPAPI），macOS 使用 Keychain，Linux 使用 Secret Service（gnome-keyring / KWallet）。即使数据目录被整个拷走或上传网盘，也拿不到你的密钥。v2.1.3 起设置页只写不回显，保存后只显示「已配置」，可输入新 Key 替换或点「清除」删除。大多数情况下<b>无需重填</b>：旧版本 Key 会在首次启动时自动迁移；仅当从很老的版本跨级升级时需要重新输入一次。</p></div>
+        <div class="faq-item" data-reveal><h3>AI 文本模型是什么？</h3><p>它用于应用内的「AI 生成风格描述」和「AI 生成描述与试听文本」。设置中默认 mimo-v2.6-flash，点「获取模型」可列出当前 Key 可用的文本模型并选择。文本模型与 ASR 为付费模型，使用时需账户有余额。</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download CTA -->
+  <section class="section section-alt" id="download">
+    <div class="wrap">
+      <div class="cta" data-reveal>
+        <h2>准备好让你的角色开口了吗？</h2>
+        <p>下载 YiziVoice，立即开始语音克隆与文生音创作。</p>
+        <div class="cta-card">
+          <div class="cta-source">
+            <a class="btn" href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              GitHub Releases
+            </a>
+            <p class="cta-platform">Windows / macOS / Linux 版（推荐）</p>
+          </div>
+          <div class="cta-source">
+            <a class="btn" href="https://pan.baidu.com/s/17v_sHe6_dAXytbnRoDSmfg?pwd=c4gs" target="_blank" rel="noopener">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              百度网盘下载
+            </a>
+            <p class="cta-platform">Windows / macOS / Linux 版 · 国内镜像</p>
+            <div class="cta-code" data-code="c4gs" onclick="copyCode(this)" role="button" tabindex="0" aria-label="复制提取码 c4gs" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyCode(this);}">
+              <span class="cta-code-label">提取码</span>
+              <span class="cta-code-value">c4gs</span>
+              <span class="cta-code-copy">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                复制
+              </span>
+            </div>
+          </div>
+          <div class="cta-source">
+            <a class="btn" href="https://pan.quark.cn/s/bcbea60bcaa5" target="_blank" rel="noopener">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              夸克网盘下载
+            </a>
+            <p class="cta-platform">Windows / macOS / Linux 版 · 国内镜像</p>
+            <div class="cta-code" data-code="RK1j" onclick="copyCode(this)" role="button" tabindex="0" aria-label="复制提取码 RK1j" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyCode(this);}">
+              <span class="cta-code-label">提取码</span>
+              <span class="cta-code-value">RK1j</span>
+              <span class="cta-code-copy">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                复制
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img class="logo-img" src="logo.svg" alt="YiziVoice logo">
+        <span class="brand-text"><span class="b-yizi">Yizi</span><span class="b-voice">Voice</span></span>
+      </div>
+      <p>面向内容创作者的一站式 AI 语音工具 · 基于小米 MiMo-V2.5-TTS 系列模型</p>
+      <div class="footer-links">
+        <a href="#features">功能</a>
+        <a href="#how">流程</a>
+        <a href="#changelog">日志</a>
+        <a href="#faq">FAQ</a>
+      </div>
+    </div>
+  </footer>
+
+  <style>
+    @keyframes wavebar { 0% { transform: scaleY(0.6); } 100% { transform: scaleY(1.25); } }
+    .wave span { transform-origin: center; }
+    /* Mobile menu */
+    .nav-links.open { display: flex; flex-direction: column; position: absolute; top: 62px; left: 0; right: 0; background: rgba(232,244,253,0.96); backdrop-filter: blur(14px); padding: 18px 24px; gap: 18px; border-bottom: 1px solid var(--line); }
+    @media (max-width: 640px) { .nav-links.open { display: flex; } }
+  </style>
+
+  <!-- Scroll reveal -->
+  <script>
+    (function () {
+      var els = document.querySelectorAll('[data-reveal]');
+      if (!('IntersectionObserver' in window)) { els.forEach(function (e) { e.classList.add('revealed'); }); return; }
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('revealed'); io.unobserve(en.target); } });
+      }, { threshold: 0.12 });
+      els.forEach(function (e) {
+        var d = e.getAttribute('data-reveal-delay');
+        if (d) {
+          e.style.transitionDelay = d + 'ms';
+        } else {
+          var parent = e.parentElement;
+          var sibs = parent ? parent.querySelectorAll(':scope > [data-reveal]') : null;
+          if (sibs && sibs.length > 1) {
+            var idx = Array.prototype.indexOf.call(sibs, e);
+            e.style.transitionDelay = (idx * 90) + 'ms';
+          }
+        }
+        io.observe(e);
+      });
+
+      // Feature card waveform bars (code-generated)
+      function buildWave(elId, count, gap, min, colorA, colorB, base, amp) {
+        var el = document.getElementById(elId);
+        if (!el) return;
+        var bars = '';
+        for (var i = 0; i < count; i++) {
+          var h = Math.round(Math.max(min, Math.sin(i * 0.5) * amp + base));
+          bars += '<i style="height:' + h + '%;background:linear-gradient(to top,' + colorA + ',' + colorB + ');animation:wavebar ' + (0.8 + (i % 3) * 0.15) + 's ease-in-out ' + (i * 0.06) + 's infinite alternate"></i>';
+        }
+        el.innerHTML = bars;
+      }
+      buildWave('fwave-tts', 12, 3, 28, '#002FA7', '#F37021', 42, 30);
+      buildWave('fwave-asr', 14, 4, 24, '#12899b', '#0ea5e9', 40, 28);
+    })();
+
+    function copyCode(el) {
+      var code = el.getAttribute && el.getAttribute('data-code') || 'RK1j';
+      var label = el.querySelector && el.querySelector('.cta-code-copy');
+      if (!label) label = el;
+      var done = function () {
+        var old = label.textContent;
+        label.textContent = '已复制';
+        setTimeout(function () { label.textContent = old; }, 2400);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(done).catch(function () { fallbackCopy(code, el, done); });
+      } else {
+        fallbackCopy(code, el, done);
+      }
+    }
+    function fallbackCopy(text, btn, done) {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); done(); } catch (e) {}
+      document.body.removeChild(ta);
+    }
+
+    function toggleLingPlay(btn) {
+      var audio = document.getElementById('lingAudio');
+      if (!audio) return;
+      if (audio.paused) {
+        audio.play().catch(function () {});
+        audio.onended = function () { setLinIcon(btn, false); };
+      } else {
+        audio.pause();
+      }
+      setLinIcon(btn, !audio.paused);
+    }
+    function setLinIcon(btn, playing) {
+      var p = btn.querySelector('.ic-play');
+      var s = btn.querySelector('.ic-pause');
+      if (p) p.style.display = playing ? 'none' : '';
+      if (s) s.style.display = playing ? '' : 'none';
+    }
+
+    // Changelog version tabs
+    (function () {
+      var CL_DATA = [
+        { ver: 'v2.1.3', date: '2026-11-14', latest: true, items: [
+          { t: 'add', txt: 'API Key 改为只写式：保存后加密存入系统钥匙串，设置页不再回显；输入框内提供「验证」与「保存」，保存后只显示「已配置」' },
+          { t: 'add', txt: '新增可配置 AI 文本模型：默认 mimo-v2.6-flash，可获取当前 Key 可用的模型并选择；AI 生成风格描述 / 音色描述不再依赖已下线的 mimo-v2.5' },
+          { t: 'add', txt: '音色克隆新增第三入口「设计音色」：用文字描述年龄、音色、语速、情绪与场景生成样本；可用 AI 一次生成音色描述与试听文本' },
+          { t: 'add', txt: '音色分类新增默认「设计音色」，旧数据一次性补齐；删除后不会再自动恢复' },
+          { t: 'opt', txt: '凭据库写入失败不再回退 settings.json 明文：报错并保留输入草稿；旧版文件密钥迁移进系统钥匙串后抹除' },
+          { t: 'add', txt: '教程页改为流程图 + 左图右文的 CSS 界面示意，支持折叠详情和直达设置 / 工具页' },
+          { t: 'add', txt: '新增 Linux 版（AMD64）：提供 deb 与 AppImage 两种包，版本号与 Windows / macOS 保持一致，功能完全相同' },
+          { t: 'add', txt: 'Linux 版用系统钥匙串（gnome-keyring / KWallet 的 Secret Service）保存 API Key，与 Windows 凭据管理器、macOS Keychain 同等处理，不落明文文件' },
+          { t: 'fix', txt: '修复 Linux 安装后图标未注册：补全 32–512 多尺寸图标，并把桌面项的窗口类名与程序实际 WM_CLASS 对齐（此前部分桌面环境只显示通用占位图标）' },
+          { t: 'opt', txt: 'AppImage 标注为实验性：它捆绑了图形库，在部分较新发行版（Mesa 25+）上有已知兼容问题；遇到启动异常请改用 deb' }
+        ]},
+        { ver: 'v2.1.2', date: '2026-10-13', latest: false, items: [
+          { t: 'opt', txt: '视觉全面重做：液态玻璃材质、跟随鼠标的指针光、明暗两套主题重做（暗色改为中性近黑，两个品牌色主次对调）' },
+          { t: 'opt', txt: '文本框里的光标换成主题色加粗竖条 —— 浏览器自带的 1px 细线在这个界面上经常看不见' },
+          { t: 'opt', txt: '文生音把「两级四种」控制合并为三种方式：标签方式 / 自由描述 / 导演演绎，一排三选一、选一次就能开写；点「示例」不再覆盖你已经写好的正文' },
+          { t: 'opt', txt: '音色克隆与音转文的「录音 / 上传文件」不再是二选一：两种方式并排，拖文件进去就是上传、点圆钮就是录音；录音中圆钮变成停止' },
+          { t: 'add', txt: '音色卡片名称下面画上该音色样本的波形水印 —— 老音色打开音色库时会自动补上，无需重新导入' },
+          { t: 'opt', txt: '标签可以用 Tab 键选中并插入；朗读文本的字数提示统一到右下角；历史记录的一排操作键盘也能摸到' },
+          { t: 'fix', txt: '修复下拉菜单贴近屏幕底部时被裁掉（现在改为向上展开），以及鼠标点过的按钮让整排操作再也不收起的问题' }
+        ]},
+        { ver: 'v2.1.1', date: '2026-09-21', latest: false, items: [
+          { t: 'fix', txt: '修复安装版点「下载」无反应：下载不再经过浏览器取数环节，直接由本地落盘（该问题自 v2.0.2 起潜伏三个版本，只在安装版暴露）' },
+          { t: 'fix', txt: '修复从其它页面第一次点历史记录不生效、并重复弹出两条提示的问题' },
+          { t: 'add', txt: '历史记录完整状态还原：点击一条记录即可回到生成时的编辑器状态（控制模式、自然语言明细、风格、文案），并把当时那条音频放回工作台' },
+          { t: 'add', txt: '历史音频下载：任意记录一键「另存为」；音转文的录音也会保存音频，同样可播放与下载' },
+          { t: 'add', txt: '新增「清理孤儿音频」：一键清掉已不对应任何记录的残留音频文件' },
+          { t: 'opt', txt: '移除已废弃的旧运行时实现，安装包与代码库更干净；版本号改为构建时自动注入，避免多处手工同步' }
+        ]},
+        { ver: 'v2.0.4', date: '2026-09-07', latest: false, items: [
+          { t: 'add', txt: '文生音布局重构：语音设置 / 朗读文本 / 结果列表卡片化，控制区随滚动，小窗口不再遮挡生成结果' },
+          { t: 'add', txt: '朗读文本卡新增标题与一键清空按钮，新用户一眼明白该填什么' },
+          { t: 'add', txt: '风格控制增强：自定义风格支持「新增 / 修改 / 删除」，chip 悬停即现操作按钮' },
+          { t: 'add', txt: '自然语言控制输入引导升级：占位文案提示可填关键字后一键 AI 生成风格描述' },
+          { t: 'opt', txt: '三栏顶部对齐：左/右栏收起按钮与栏首同行；左栏收起态改纵向 icon 导航；右栏收起完全隐藏、展开按钮在主卡片右上角' },
+          { t: 'opt', txt: '收折快捷键调整为 Ctrl+L / Ctrl+R；克隆音色图标焕新，四个主入口统一样式' },
+          { t: 'fix', txt: '修复 Windows 下 tauri:dev 偶发 EBUSY 崩溃（Vite 不再监视 Rust 编译产物）' },
+          { t: 'add', txt: '克隆音色：分类管理点击即跳转，音色库平滑定位到对应分类分组' },
+          { t: 'add', txt: '关于弹窗：YiziMarkdown 与荔书产品入口新增品牌图标' },
+          { t: 'opt', txt: '应用图标全套焕新：新 logo 同步桌面、任务栏、安装包与移动端图标' }
+        ]},
+        { ver: 'v2.0.3', date: '2026-09-01', latest: false, items: [
+          { t: 'add', txt: '文生音 · 一级模式「自然语言控制」上线：与「音频标签控制」互斥并行，按需切换' },
+          { t: 'add', txt: '二级模式「一段话描述 / 导演演绎」：贴合 MiMo-V2.5-TTS 官方导演模式 API，角色 / 场景 / 指导 三段填写' },
+          { t: 'add', txt: '「AI 生成风格描述」一键扩展：填关键字即可由 MiMo-V2.5 文本大模型按示例风格生成详细指令，秒级响应' },
+          { t: 'add', txt: '「示例」标签秒填：内置「考试少年 / 公关总监 / 骄傲明星」三条完整范例，零成本上手' },
+          { t: 'add', txt: '克隆音色「分类重命名」：分类管理面板可内联修改分类名，引用自动同步' },
+          { t: 'opt', txt: '风格控制面板新增「+」入口，一键新增自定义风格标签' },
+          { t: 'fix', txt: '修复若干稳定性问题；Tauri 资源打包 map 写法在 Windows NSIS 下也已验证不压平' }
+        ]},
+        { ver: 'v2.0.2', date: '2026-08-25', latest: false, items: [
+          { t: 'add', txt: '全新三栏工作台界面：常驻历史左栏 + 中央操作区 + 右侧配置面板，启动直达欢迎页' },
+          { t: 'add', txt: '亮/暗双主题一键切换，全新「精致玻璃」设计体系与线性图标语言' },
+          { t: 'add', txt: '全套快捷键：Ctrl+1/2/3 切换工具，Ctrl+B/J 折叠栏位，Ctrl+F 搜索历史' },
+          { t: 'opt', txt: '自绘波形播放器与统一弹窗体系，替代原生控件；克隆卡片与分组体验重做' },
+          { t: 'fix', txt: '修复保存 API Key 后功能不可用、标签选中态透明、弹窗入场跳动等问题' }
+        ]},
+        { ver: 'v2.0.1', date: '2026-08-25', latest: false, items: [
+          { t: 'opt', txt: '全新 Tauri 2 内核重构：安装包从 78MB 减至约 10MB（−87%），安装后占用从 233MB 降至约 16MB（−93%）' },
+          { t: 'opt', txt: '启动速度大幅提升：冷启动从 2–3 秒缩短到半秒以内，点击图标即刻可用' },
+          { t: 'add', txt: 'API Key 升级为 Windows 凭据管理器加密存储（DPAPI），本地文件不再保存明文密钥，升级自动迁移' },
+          { t: 'add', txt: '界面、功能与数据完全不变，与旧版本无缝衔接；修复音转文偶发误报未配置密钥的问题' }
+        ]},
+        { ver: 'v1.0.5', date: '2026-08-10', latest: false, items: [
+          { t: 'add', txt: '新增音色分类管理，克隆音色可按分类组织、重命名、删除与批量迁移' },
+          { t: 'add', txt: '克隆音色角色与分类元数据自动同步，保证数据一致' },
+          { t: 'opt', txt: '官网首页新增更新日志模块，并优化下载区展示' }
+        ]},
+        { ver: 'v1.0.4', date: '历史版本', latest: false, items: [
+          { t: 'opt', txt: '优化历史记录侧边栏交互与回放体验' },
+          { t: 'fix', txt: '修复若干已知问题，提升稳定性' }
+        ]}
+      ];
+      var tabsEl = document.getElementById('clTabs');
+      var cardEl = document.getElementById('clCard');
+      if (!tabsEl || !cardEl) return;
+      function renderCard(ver) {
+        var d = null;
+        for (var i = 0; i < CL_DATA.length; i++) { if (CL_DATA[i].ver === ver) { d = CL_DATA[i]; break; } }
+        if (!d) return;
+        var items = '';
+        for (var j = 0; j < d.items.length; j++) {
+          items += '<li class="' + d.items[j].t + '">' + d.items[j].txt + '</li>';
+        }
+        cardEl.innerHTML =
+          '<div class="cl-card-head">' +
+            '<span class="cl-version">' + d.ver + '</span>' +
+            (d.latest ? '<span class="cl-latest-tag">最新</span>' : '') +
+            '<span class="cl-date">' + d.date + '</span>' +
+          '</div>' +
+          '<ul class="cl-list">' + items + '</ul>';
+      }
+      tabsEl.addEventListener('click', function (e) {
+        var btn = e.target.closest('.cl-tab');
+        if (!btn) return;
+        var tabs = tabsEl.querySelectorAll('.cl-tab');
+        for (var i = 0; i < tabs.length; i++) tabs[i].classList.remove('active');
+        btn.classList.add('active');
+        renderCard(btn.getAttribute('data-ver'));
+      });
+      renderCard(CL_DATA[0].ver);
+    })();
+  </script>
+</body>
+</html>

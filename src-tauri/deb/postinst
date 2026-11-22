@@ -1,0 +1,9 @@
+#!/bin/sh
+# Debian post-install: register the app icon and desktop entry immediately.
+# Tauri does not generate a postinst by default, so dpkg leaves
+# /usr/share/icons/hicolor/icon-theme.cache stale and some desktop
+# environments then show a generic placeholder icon instead of the app icon.
+# Both tools may be absent on minimal images; failures must not fail the install.
+gtk-update-icon-cache -qf /usr/share/icons/hicolor 2>/dev/null || true
+update-desktop-database /usr/share/applications 2>/dev/null || true
+exit 0

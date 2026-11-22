@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "lastUpdated": 1718888888888,
+  "styles": [
+    {
+      "id": "builtin_gentle",
+      "label": "温柔",
+      "value": "用温柔轻缓的语调，声音柔和，像在耳边细语",
+      "builtin": true
+    },
+    {
+      "id": "builtin_lively",
+      "label": "活泼",
+      "value": "用活泼轻快的语调，语速稍快，声音明亮有活力",
+      "builtin": true
+    },
+    {
+      "id": "builtin_serious",
+      "label": "严肃",
+      "value": "用严肃沉稳的语调，语速适中，语气庄重正式",
+      "builtin": true
+    },
+    {
+      "id": "builtin_broadcast",
+      "label": "播音",
+      "value": "用专业播音腔，字正腔圆，语速平稳，吐字清晰",
+      "builtin": true
+    },
+    {
+      "id": "builtin_magnetic",
+      "label": "磁性",
+      "value": "用磁性低沉的男声，语速偏慢，声音有质感和厚度",
+      "builtin": true
+    },
+    {
+      "id": "builtin_sweet",
+      "label": "甜美",
+      "value": "用甜美可爱的女声，语调上扬，声音清亮甜美",
+      "builtin": true
+    },
+    {
+      "id": "builtin_sad",
+      "label": "悲伤",
+      "value": "用低沉悲伤的语调，语速缓慢，声音带着哽咽和感伤",
+      "builtin": true
+    },
+    {
+      "id": "builtin_excited",
+      "label": "激动",
+      "value": "用激动高昂的语调，语速快，声音充满热情和能量",
+      "builtin": true
+    },
+    {
+      "id": "builtin_story",
+      "label": "讲故事",
+      "value": "用讲故事的口吻，语速适中，有起伏，像在给孩子讲睡前故事",
+      "builtin": true
+    },
+    {
+      "id": "builtin_dongbei",
+      "label": "东北话",
+      "value": "用东北话口音，语调夸张，语气豪爽",
+      "builtin": true
+    },
+    {
+      "id": "builtin_yueyu",
+      "label": "粤语",
+      "value": "用粤语发音，语调自然，带有广东口音",
+      "builtin": true
+    },
+    {
+      "id": "builtin_taiwan",
+      "label": "台湾腔",
+      "value": "用台湾腔普通话，语调软糯，尾音上扬",
+      "builtin": true
+    }
+  ]
+}

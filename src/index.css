@@ -1,0 +1,855 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   YiziVoice v3 Design Tokens — 精致玻璃 Pro
+   Light is default; [data-theme="dark"] overrides.
+   All colors referenced through CSS vars (see tailwind.config.js).
+   ============================================================ */
+
+:root {
+  color-scheme: light;
+
+  /* canvas + scene.
+     v4.3 (liquid glass): a surface can only look like glass if there is something
+     BEHIND it to blur. Until now `body` carried one `radial-gradient` of
+     rgba(232,244,253,0.85), and #E8F4FD sits 1-2 levels away from the canvas
+     #EDF3FA - so the entire backdrop varied by ~2% in luminance. `backdrop-filter`
+     over a near-flat backdrop is a mathematical no-op. That is the real reason the
+     app never read as glass, and why raising the blur radius did nothing.
+     The scene is now a bright white corner plus two very faint counter-tints. Light
+     keeps its pale blue: measured max channel deviation from the canvas is R8.7.
+     White is the only thing brighter than this canvas, so white carries the
+     structure; the blue/orange are just counterpoint. */
+  --bg-canvas: #EDF3FA;
+  --bg-scene:
+    radial-gradient(1300px 900px at 84% -14%, rgba(255, 255, 255, 0.62), transparent 62%),
+    radial-gradient(820px 660px at 2% 106%, rgba(0, 47, 167, 0.032), transparent 66%),
+    radial-gradient(700px 560px at 102% 66%, rgba(243, 112, 33, 0.030), transparent 64%),
+    var(--bg-canvas);
+
+  /* material surfaces.
+     v4.3: alphas dropped hard so the scene reads through the material.
+     M2 deliberately gets NO backdrop-filter - a card always sits inside a panel or
+     overlay that has ALREADY blurred the scene, so the card's own backdrop is smooth
+     and a second blur buys nothing visible while costing a whole render surface.
+     That is now the actual reason for the M2 rule (it used to read "perf budget"),
+     and it is why M2 can afford to be the most transparent of the three. */
+  --surface-1: rgba(255, 255, 255, 0.58);
+  /* v4.3.1: light M2 is a pale BLUE pane, not white.
+     On a white surface there is nothing for glass to be. A white translucent card over
+     a whitish panel differs only in brightness, so the only thing that could move was
+     scene bleed - and nesting two translucent layers MULTIPLIES the compression:
+     (1-0.55)*(1-0.58) = 19%, so the light card's red channel varied by ~1.5 levels
+     across the whole viewport. Invisible. The white card was never going to look like
+     glass no matter what the blur did.
+     Giving the card its own pale blue gives the layer a COLOUR, which is what glass
+     actually reads as -- and it is exactly the mechanism that already makes dark work:
+     there the surface is grey, so the scene's orange and blue read through it.
+     v4.3.2: deepened past "pale" for a second, measured reason. The pointer light is
+     white, and a white light can only brighten -- so what matters is how much headroom
+     the surface has ABOVE it, not how strong the light is. At the first value the card
+     composited to rgb(235,244,254) and a 0.42 white light peaked at rgb(243,249,254):
+     +8/+5/+0 levels. That is why the light was invisible, and raising its alpha would
+     have bought at most 8 more levels before clipping to white. Deepening the card is
+     the only lever that actually gives the light somewhere to go - it is now roughly
+     +17/+11/+2 levels. The cost is dark text contrast, and three semantic text tokens
+     had to go darker again to pay for it. */
+  --surface-2: rgba(226, 240, 254, 0.56);
+  --surface-3: rgba(255, 255, 255, 0.86);
+  --surface-hover: rgba(15, 35, 80, 0.045);
+  --surface-active: rgba(0, 47, 167, 0.08);
+
+  /* glass: edge / sheen / glow. Kept as tokens so both themes are described by the
+     same three ideas and neither can drift into its own recipe.
+     v4.3.3: the LIGHT rim gave up the gradient and went back to a plain weak hairline.
+     Two rounds of measurement got it here. First it was a white highlight, which on a
+     near-white card measured only ~9 levels and, worse, sat on the CORNERS where a 1px
+     diagonal line only gets ~50% coverage. Then it was a dark blue gradient, which was
+     finally strong (-25 to -55) but looked wrong: a gradient makes the perimeter uneven
+     in colour AND in apparent weight, so instead of a glass edge it read as a broken
+     border. A light surface simply does not have the option a dark one has -- there, a
+     uniform bright line IS the edge, at +43 levels, and a gradient on top of it reads as
+     lighting. So:
+       dark  keeps `rgba(255,255,255,0.20) -> 0.05 -> 0.12`, a lit edge.
+       light keeps a single flat value whose only job is to be an even hairline; the
+             "this is a card" weight is carried by `--shadow-card` instead.
+     This is deliberately NOT symmetric, and the asymmetry is the point: the same idea
+     (mark the boundary) is expressed with the sign the surface can afford. */
+  --glass-edge: rgba(15, 35, 80, 0.08);
+  --glass-sheen: rgba(255, 255, 255, 0.55);
+  /* The pointer light: what colour it is, and how far it reaches.
+     White, at a MID alpha -- and the history of this number is the useful part, because
+     it has now been wrong in both directions.
+
+     v4.3.2 made it a warm white to buy visibility. That was rejected on sight: a warm lamp
+     on a light BLUE card is a hue clash. The arithmetic behind it was about how much signal
+     was available and said nothing about whether the signal belonged there. The rule that
+     survives: a lamp must not fight the surface's own hue. Dark's surfaces are neutral
+     (R=G=B), so an orange lamp reads as light with nothing to clash against; the light
+     card is pale blue, so the only hue it can accept is its own -- and anything darker
+     than the card is a SHADE, not a light. That leaves exactly one option: white.
+
+     v4.3.3 then took white to 0.85, on the reasoning that the card composites to
+     rgb(235,244,254), its blue channel is already at 254, so the whole headroom is
+     +20/+11/+0 and a light that is "subtle" cannot exist. The arithmetic was right and the
+     result was still wrong -- measured +17/+8/+0, which the user read as an intrusive lit
+     patch ("还是有点干扰"). Spending the entire ceiling is not the same as spending what
+     the design needs.
+
+     Now 0.55, measured +11/+5/+0 (euclid ~12): about a third of the mathematical ceiling,
+     which is what "barely there" costs. This is affordable only because the light is no
+     longer carrying the hover feedback -- `--shadow-card` -> `--shadow-lg` does that, and
+     it does it at -46 levels, an order of magnitude more signal than this. So the light is
+     decoration on top of a real state change, and it can afford to be faint. If it ever
+     has to carry the state change again, this number is too low and the right fix is to
+     give the state change back to the shadow, not to raise this.
+     Over text-entry elements the light is not dimmed but PARKED -- see glassLight.ts. */
+  --glass-glow: rgba(255, 255, 255, 0.55);
+  --glass-light: 300px;
+
+  /* ---- The text-entry cursor: a thicker, taller bar in the theme accent. ----
+     Reason it exists: the browser's own I-beam is a 1px hairline, and on these
+     surfaces it reads as white nothing -- the user kept losing it ("编辑指针经常
+     看不见"). So the pointer inside a text field becomes a piece of the design.
+
+     Three constraints decided this exact shape:
+
+     1. SVG, not PNG. A cursor image is authored in CSS px and then scaled by the
+        display DPI, so a raster cursor goes soft on the 125% / 150% scaling most of
+        these laptops run. An SVG is rasterised at the real scale. 9x24 is also far
+        inside Chromium's 128x128 cursor limit -- a bigger image is silently
+        IGNORED and you quietly get the fallback, so never grow this past that.
+     2. The bar carries a halo, and the halo is chosen against the TEXT, not against
+        the field. A cursor is drawn on top of glyphs, and the direction the glyphs
+        contrast flips with the theme: light theme has dark text, so the halo is
+        white; dark theme has light text, so its halo is canvas black. Against the
+        field itself the halo is invisible (pale blue / near-black respectively), so
+        it never pads the bar visually -- it only prises the bar off the letters.
+     3. The fill is `--accent`: the THEME colour. Klein blue in light, Hermes orange
+        in dark. Not `--accent-strong` -- on a near-black field the deeper orange is
+        the weaker signal, and the cursor has to be the brightest thing under the
+        pointer.
+
+     Geometry: a 3x20 bar (rx 1.5) with a 1px halo, hotspot `4 12`. That is 4px wide
+     and 21px tall on screen, against roughly 1x16 for the native I-beam -- the
+     "加粗加高" the user asked for, and 21px is about one line of `text-sm`.
+
+     The geometry is IDENTICAL in both themes; only the two colours differ, and they
+     have to: a data URI cannot interpolate a var(), and a cursor image cannot
+     inherit `currentColor`, so theming one means writing it out twice. Edit BOTH
+     blocks together -- `design:check` asserts the two differ only in their colours. */
+  --cursor-text: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='24'%3E%3Crect x='2.5' y='2' width='3' height='20' rx='1.5' fill='%23002FA7' stroke='%23FFFFFF' stroke-width='1'/%3E%3C/svg%3E") 4 12, text;
+
+  /* text */
+  --text-1: #0F1B33;
+  --text-2: rgba(15, 27, 51, 0.78);
+  /* v4: was 0.52, which measured only 3.54:1 on white. Captions are 12px
+     (normal-text grade) so they must clear AA 4.5:1.
+     v4.1: 0.60 cleared 4.55:1 on the pane background only. Rows change their
+     background on hover (`--surface-hover`) and press (`--surface-active`), and
+     on those the same text measured 4.37 / 4.28 -- below AA. Text colour must be
+     verified against the DARKEST surface it can sit on, not just the resting one.
+     0.64 clears the worst case at 4.84:1. */
+  --text-3: rgba(15, 27, 51, 0.64);
+
+  /* hairlines */
+  --hairline: rgba(15, 35, 80, 0.08);
+  --hairline-strong: rgba(15, 35, 80, 0.16);
+
+  /* accents */
+  --accent: #002FA7;
+  --accent-strong: #002FA7;
+  --accent-hover: #1440C9;
+  --accent-soft: rgba(0, 47, 167, 0.09);
+  /* The voice card's watermark (the sample's own peak envelope) is painted UNDER the name
+     and the date, so its strength is not an aesthetic dial: the ceiling is the 12px date's
+     contrast, and the two themes pay different prices for the same number. Measured on the
+     rendered card, light ink at 10% is rgb(212,225,246) on a rgb(235,245,254) card - a cool
+     grey smudge - while dark wants exactly 10% (there the ink is a LIFTED warm orange, so the
+     date keeps 5.20:1). Hence 5% here and 10% in dark. See DESIGN.md §5.13. */
+  --wave-mark-opacity: 0.05;
+  --accent-soft-2: rgba(0, 47, 167, 0.05);
+  --on-accent-strong: #FFFFFF;
+
+  --accent-2: #F37021;
+  --accent-2-soft: rgba(243, 112, 33, 0.1);
+
+  --success: #2FA35C;  --success-soft: rgba(47, 163, 92, 0.11);
+  /* v4.2: one red for both themes, and the hue is not arbitrary. v4.1 had light
+     #E5484D and dark #F2666B; both have B > G (by 5), which is what reads as "rose"
+     rather than "red" on a dark canvas, and both fail AA under white text
+     (3.91:1 / 3.05:1). #DA3733 has G > B and carries white text at 4.59:1, so the
+     danger button is legal in both themes with no per-theme variant. */
+  --danger: #DA3733;   --danger-soft: rgba(218, 55, 51, 0.10);
+  --warning: #E6A23C;  --warning-soft: rgba(230, 162, 60, 0.12);
+
+  /* v4: semantic hues used AS TEXT need a darker variant. The fill hues above
+     only reach 2.19-3.91:1 on white - below AA for text. Fill/icon uses keep
+     the original hue; text uses these.
+     Invariant (measured, not assumed): each *-text token must clear 4.5:1 on its
+     OWN *-soft tint, because the badge pattern pairs them by construction. On
+     white alone is not enough - success/warning measured 5.04/4.87:1 on white but
+     only 4.37/4.46:1 on their soft backgrounds. Values below clear both. */
+  --success-text: #17753F;
+  --danger-text: #B3261E;
+  --warning-text: #8A5A00;
+  /* v4.3: #C2410C measured 4.39:1 once the scene existed. It had been solved against
+     a SINGLE flat pane; the scene now makes the pane darker in the bottom-left corner,
+     and this token's worst pairing (custom-tag text on `--accent-2-soft` over a pane)
+     went under AA. Darkened one step: 4.77:1 at worst. Same hue, one step down. */
+  --accent-2-text: #B43B0B;
+
+  /* v4.1: decorative hue family for the welcome hero's rotating word.
+     Seven hues because the word cycles through seven capabilities. Deliberately a
+     SEPARATE family, not the semantic one: anti-pattern 5.11-13 forbids decoration
+     from borrowing success/danger/warning/accent-2 (those must express real state),
+     and the legal *-text tokens number only five - not enough for seven colours.
+     Each value is solved against the WORST of the four backdrops a row can land on
+     (resting / --surface-hover / --surface-active / --accent-soft), not just the
+     resting pane: dark --surface-active is LIGHTER than the pane, and solving on the
+     pane alone put all seven at 4.37:1 there. They now sit in a 4.70-4.74 band at
+     worst and 5.54-5.81 at rest, so all seven words carry equal visual weight.
+     Decoration only - never reuse these to express state.
+
+     ORDER MATTERS and is not the hue order. The reel shows them back to back, and the
+     first cut assigned them in descending hue (225->186->128->66->22->330->275), i.e. a
+     walk around the colour wheel - so consecutive words looked like a gradient rather
+     than a change. They are now permuted to maximise the worst-case CIE Lab dE between
+     neighbours (including the 模仿->创造 wrap): the worst adjacent pair went from
+     30.0 to 88.8. Optimised over all 720 orderings; pinning 创造 to the brand blue
+     costs nothing, the best constrained and unconstrained orders score the same. */
+  --hero-1: #1F54F6;  /* 创造 - 225 deg brand Klein blue */
+  --hero-2: #0A7718;  /* 克隆 - 128 deg green */
+  --hero-3: #C3166C;  /* 生成 - 330 deg magenta */
+  --hero-4: #07717D;  /* 演绎 - 186 deg teal */
+  --hero-5: #AF4507;  /* 朗诵 -  22 deg brand orange (same hue as accent-2 by intent) */
+  --hero-6: #942AE1;  /* 识别 - 275 deg violet */
+  --hero-7: #626C03;  /* 模仿 -  66 deg gold */
+
+  /* elevation (blue-black tinted)
+     v4.3.3: the LIGHT theme's card separation moved from a lit rim to a shadow.
+     A dark surface reads its own edge by being BRIGHTER at the boundary; a light surface
+     reads it by being DARKER, and on a pale card a darker line has to be blue, which
+     reads as a border rather than as glass -- and because the rim token is a gradient
+     (bright corner to dark corner), the perimeter came out uneven in both colour and
+     apparent weight, i.e. it looked broken. The tool that actually has room on a light
+     surface is the shadow, so:
+       --shadow-card  now carries the resting "this is a card" weight, and
+       --shadow-lg    carries the hover lift.
+     Both are kept SHORT and tight on purpose: --shadow-card in particular is used by
+     cards that live inside the left pane's own scroll container, so a long throw would
+     be clipped exactly like the home row's hover shadow was. Reach is what matters here,
+     not just darkness: card = 18px sides / 24px down, lg = 44px sides / 60px down.
+     Dark keeps the bright rim and its original shadows -- there the rim works. */
+  --shadow-xs: 0 1px 2px rgba(16, 38, 78, 0.06);
+  --shadow-sm: 0 4px 14px rgba(16, 38, 78, 0.07);
+  --shadow-md: 0 12px 32px rgba(16, 38, 78, 0.09);
+  --shadow-lg: 0 2px 6px rgba(16, 38, 78, 0.08), 0 16px 44px rgba(16, 38, 78, 0.20);
+  --shadow-card: 0 1px 2px rgba(16, 38, 78, 0.06), 0 6px 18px rgba(16, 38, 78, 0.11);
+  --shadow-panel: var(--shadow-md);
+  --shadow-overlay: var(--shadow-lg);
+  /* v4.3: `--inset-hi` (a flat 1px white inset line) is gone. The top highlight is
+     now the first stop of `--glass-edge`, so keeping both would draw the rim twice.
+     It was also the wrong shape for glass: a uniform 1px line reads as a border,
+     while the gradient brightens where the light actually lands.
+     v4.3.3 (dark only): that reasoning still holds here. It is only the LIGHT theme
+     that gave up the gradient, for the reason spelled out above. */
+
+  /* motion & misc */
+  --blur-panel: 28px;
+  --blur-overlay: 40px;
+  --ring: 0 0 0 3px var(--accent-soft);
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  /* v4.2: neutral near-black, and the theme colour becomes Hermes orange.
+     v4.1 was navy through and through: the canvas was #0D1420, which measures a
+     saturation of 0.59 with blue at 2.5x red, and every layer followed it - the
+     surfaces (23,31,48) / (31,41,62) / (26,34,52), the glow, --surface-active and
+     --accent were all blue. Read as "neither blue nor black", and that is exactly
+     what it was. Nothing below carries a hue now except the accent itself:
+     surfaces and text are strictly R=G=B, so the only colour on screen is the one
+     we put there on purpose. */
+  --bg-canvas: #0A0A0B;
+  /* v4.3 scene. Dark is the theme where glass actually pays off: the blooms shift
+     HUE far more than luminance (they raise the canvas from lum 0.003 to 0.009 but
+     move R by 24 levels), and hue is exactly what a blur can smear across a panel.
+     Warm orange leads because orange is the dark theme's colour. */
+  --bg-scene:
+    radial-gradient(1100px 780px at 78% -10%, rgba(243, 112, 33, 0.13), transparent 62%),
+    radial-gradient(900px 700px at 4% 92%, rgba(70, 110, 255, 0.10), transparent 64%),
+    radial-gradient(700px 540px at 104% 58%, rgba(150, 90, 255, 0.06), transparent 62%),
+    var(--bg-canvas);
+
+  /* v4.3: alphas dropped hard so the scene reads through. On a near-black canvas
+     keeping the composite where it was means RAISING the base grey as alpha falls -
+     lowering alpha alone would just collapse every surface onto the canvas. These
+     pairs hold the previous composites (panel ~29, card ~38) over the plain canvas,
+     which is why every already-solved contrast still holds. */
+  --surface-1: rgba(46, 46, 48, 0.55);
+  --surface-2: rgba(50, 50, 54, 0.50);
+  --surface-3: rgba(38, 38, 40, 0.84);
+  --surface-hover: rgba(255, 255, 255, 0.05);
+  /* Pressed/selected keeps the accent's hue, exactly as light does. */
+  --surface-active: rgba(243, 112, 33, 0.13);
+
+  /* glass: the same three ideas as light, re-solved for a near-black base.
+     v4.1's `--inset-hi` was rgba(255,255,255,0.04) - 4% white on near-black is
+     invisible, so dark had no glass edge at all. That is fixed here, and it is why
+     dark reads as the more "liquid" of the two themes even though its scene is
+     quieter in absolute luminance. */
+  --glass-edge: linear-gradient(150deg, rgba(255, 255, 255, 0.20), rgba(255, 255, 255, 0.05) 40%, rgba(255, 255, 255, 0.12));
+  --glass-sheen: rgba(255, 255, 255, 0.022);
+  /* In dark the pointer light is WARM #F37021, not white -- and that is arithmetic,
+     not taste. A dark surface carrying light text has almost no luminance headroom,
+     so every photon added to the surface is taken straight out of the text's contrast.
+     Per unit of alpha, white costs ~3.3x more luminance than Hermes orange (1.0 vs
+     0.30), so the same budget buys three times as much light this way. Measured at a
+     white 0.085 the lit card dropped `--danger-text` to 3.14:1; as orange at 0.06 it
+     sits inside the budget the token fixes below opened up. */
+  --glass-glow: rgba(243, 112, 33, 0.06);
+  /* Wider than light's on purpose: the peak alpha is what contrast constrains, so the
+     only free way to make a weak light read is to spread it over more of the card. */
+  --glass-light: 320px;
+
+  /* Text-entry cursor, dark: same geometry as the light block, and only the two
+     colours differ -- the fill is this theme's `--accent`, the halo is the canvas
+     black (dark-theme text is LIGHT, so the halo has to be the dark side). See the
+     light block for the full reasoning; `design:check` enforces that the geometry
+     stays identical. Edit both. */
+  --cursor-text: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='24'%3E%3Crect x='2.5' y='2' width='3' height='20' rx='1.5' fill='%23FF9A5C' stroke='%230A0A0B' stroke-width='1'/%3E%3C/svg%3E") 4 12, text;
+
+  --text-1: #EDEDED;
+  --text-2: rgba(237, 237, 237, 0.72);
+  /* v4: was 0.36, which measured only 3.03:1 and failed AA.
+     v4.1: 0.52 cleared 4.99:1 resting but only 4.47:1 on `--surface-hover`
+     (dark surfaces get LIGHTER on hover, so light text loses contrast there).
+     0.58 cleared the worst case at 4.95:1.
+     v4.3: 0.58 dropped to 4.49:1 once the scene existed. The scene's warm bloom
+     brightens the top of a card, and `--text-3` on `accent-soft` over that card is
+     the new worst pairing - 0.01 under AA. This is the same story as light
+     `--accent-2-text`: lowering surface alpha hands part of the text budget to the
+     backdrop, and the marginal token pays for it. */
+  --text-3: rgba(237, 237, 237, 0.63);
+
+  --hairline: rgba(255, 255, 255, 0.07);
+  --hairline-strong: rgba(255, 255, 255, 0.14);
+
+  /* ROLES SWAP IN DARK. `--accent` is the theme's colour, and in dark that is the
+     brand orange; the Klein blue steps down into the `--accent-2` slot it held in
+     light. Both brand colours are present in both themes - only which one leads
+     changes. See DESIGN.md 10.3.
+
+     `--on-accent-strong` cannot stay white: white on #F37021 measures 2.97:1.
+     On a near-black canvas a bright orange fill with a near-black label is both
+     legal (7.07:1) and the stronger look.
+
+     `--accent` and `--accent-strong` are NOT the same value here, and that is
+     deliberate - v4.1 already split them (text #8AA2FF / fill #3D5BD7). The brand
+     orange #F37021 measures only 4.21:1 as text on `--accent-soft` sitting on a
+     card, because the card (--surface-2) is lighter than the panel the soft tint
+     was solved against. `--accent` is therefore a lightened orange that clears the
+     composed worst case; `--accent-strong` keeps the brand hue for fills. */
+  --accent: #FF9A5C;
+  --accent-strong: #F37021;
+  --accent-hover: #FFA05E;
+  --accent-soft: rgba(243, 112, 33, 0.14);
+  /* Same watermark as light, deliberately NOT the same number: here the ink is a lifted warm
+     orange on a dark card, which reads as "lit from behind" rather than as dirt, and the light
+     date still holds 5.20:1 on it. Light drops to 5%. See DESIGN.md §5.13. */
+  --wave-mark-opacity: 0.1;
+  --accent-soft-2: rgba(243, 112, 33, 0.07);
+  --on-accent-strong: #170A03;
+
+  /* The blue, now secondary. This is the value v4.1 used as the dark accent, so it
+     is already contrast-verified against these surfaces. */
+  --accent-2: #9BB0FF;
+  --accent-2-soft: rgba(138, 162, 255, 0.14);
+
+  --success: #4AC383;  --success-soft: rgba(70, 185, 124, 0.14);
+  /* Same red as light on purpose - see the note in the light block. Only the soft
+     tint differs (it has to sit on a much darker base). */
+  --danger: #DA3733;   --danger-soft: rgba(218, 55, 51, 0.08);
+  --warning: #EDB05E;  --warning-soft: rgba(237, 176, 94, 0.15);
+
+  /* v4: on dark canvas the base hues already clear AA (6.05-9.64:1),
+     so the text variants simply alias them.
+     v4.2 exception: `--danger-text` is used as `hover:text-danger-text hover:bg-danger-soft`
+     (5 call sites). Against the canvas the fill red wins easily, but red text on a red
+     tint over a card only reaches 4.06:1, so dark needs a lighter text variant.
+     #FA6B6B keeps G = B, i.e. a light red, not a rose. */
+  --success-text: var(--success);
+  --danger-text: #FF7C78;
+  --warning-text: var(--warning);
+  --accent-2-text: var(--accent-2);
+
+  /* v4.1: the same seven decorative hues, re-solved for the dark backdrops so they
+     land in the same band, and in the same permuted order as the light set above.
+     Dark needs a lighter value, not the same one. */
+  --hero-1: #6F92F9;  /* 创造 225 deg */
+  --hero-2: #0EAE23;  /* 克隆 128 deg */
+  --hero-3: #EE66AA;  /* 生成 330 deg */
+  --hero-4: #0AA6B7;  /* 演绎 186 deg */
+  --hero-5: #F66D1E;  /* 朗诵  22 deg */
+  --hero-6: #BD7AEC;  /* 识别 275 deg */
+  --hero-7: #909F04;  /* 模仿  66 deg */
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.32);
+  --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.34);
+  --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
+  /* v4.3.3: this MUST be redeclared here. `--shadow-card` stopped being
+     `var(--shadow-sm)` in light and became a literal blue-black value, and dark does not
+     inherit `--shadow-sm` through it any more -- a custom property declared in `:root`
+     resolves `var()` against `:root`'s own cascade, so leaving it out would have handed
+     dark a blue-tinted card shadow. Measured after the fact: the pixels under a dark card
+     read 26/28/34, i.e. blue by +8, on a theme whose surfaces are R=G=B by rule.
+     Keep both themes' `--shadow-card` explicit; do not "simplify" this back into one. */
+  --shadow-card: var(--shadow-sm);
+}
+
+/* ============ Base ============ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter', 'Helvetica Neue', 'PingFang SC', 'Microsoft YaHei', Arial, sans-serif;
+  /* The scene, not a flat wash - this is what every material blurs. */
+  background: var(--bg-scene);
+  color: var(--text-1);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+::selection { background: var(--accent-soft); }
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 8px;
+}
+
+/* ============ Materials — liquid glass (v4.3) ============ */
+
+/* Three ideas, applied through shared rules so no material can drift into its own
+   recipe:
+     1. the surface is translucent over a STRUCTURED scene (see --bg-scene), so the
+        blur has something to actually smear. A blur over a flat backdrop is a
+        no-op; that was the whole problem.
+     2. the rim is a gradient, not a hairline. Glass is brightest where it catches
+        light and falls off around the edge.
+     3. a specular sheen sits at the top of the box, as if lit from above.
+
+   Pseudo-elements: ::after carries the gradient rim. It uses the padding-box mask
+   trick (paint a full gradient, then mask away everything but a 1px frame) - the
+   only way to get a gradient border that still honours border-radius without extra
+   DOM. ::before carries the pointer light on the surface.
+
+   The pointer light deliberately does NOT touch this rim, even though a bright arc
+   travelling around the frame is the obvious place to put it and would cost no text
+   contrast at all. Measured over CDP: repainting ::after forces the backdrop-filtered
+   panel ANCESTOR to re-rasterize, and that costs 38ms per frame -- independent of area
+   (a 125x26 overlay costs the same as a 796x110 card). The surface light on ::before
+   costs nothing, on the same element, in the same frame. Disabling the panel's
+   backdrop-filter drops the rim's cost from 54ms to 17ms, which is how we know where
+   it goes. So the rim stays static and the light stays on the surface.
+
+   ⚠️ NO MATERIAL HAS A BORDER, AND THAT IS LOAD-BEARING. All three used to carry
+   `border: 1px solid transparent`, kept so the rim had "a slot" and the content box would
+   not move. But a border moves the padding box 1px inside the border box, and `inset` on
+   an absolutely positioned element resolves against the PADDING box -- so the rim was
+   drawn 1px inside the element's real edge while the surface colour still painted the
+   transparent band (background-clip defaults to border-box), leaving 1px of bare surface
+   outside the line. It read as TWO edges, which is what got reported on the welcome cards
+   ("怎么是两层边线"); measured profile, both themes, all four edges:
+       shadow -> 1px of plain surface -> 1px of rim -> surface
+   Two ways out were measured and rejected:
+     - `inset: -1px`, pushing the rim out onto the border band. Perfect on cards (rim is
+       then the outermost pixel, one line), but the ring lies entirely OUTSIDE the padding
+       box, and `overflow: hidden` -- which every .mat-panel in this app has -- clips
+       descendants at the padding edge. Measured: cards kept their rim, both panels lost
+       it, silently.
+     - `background-clip: padding-box`, so the surface stops at the padding box and the rim
+       marks the boundary. Keeps the rim on panels, but the band then shows what is behind
+       the element (its own shadow does not paint inside the border box), and that is
+       BRIGHTER than the shadow just outside: measured 244,248,253 against a shadow at
+       231,235,244. A light hairline plus a dark line is still two lines.
+   Removing the border makes the padding box and the border box the same box, so the
+   surface edge, the rim and (for clipping panels) the overflow clip all coincide, with no
+   band to explain and no special case. Cost, and it is the whole cost: each material's
+   content box grows by 2px, so content inside shifts by 1px and auto-sized materials
+   (cards, dropdowns, tooltips) come out 2px smaller. layout was diffed across 4 screens
+   and 26 materials to confirm nothing else moved.
+   design:check asserts the materials stay borderless -- re-adding one reintroduces the
+   second edge, and the symptom is a 1px line, which no other gate would notice. */
+
+/* `:where()` here gives this declaration ZERO specificity, deliberately.
+   Two elements in the app are `mat-overlay absolute ...` (DropdownMenu, Tooltip);
+   a plain `.mat-overlay { position: relative }` would beat Tailwind's `absolute` on
+   source order alone and silently mis-position every dropdown and tooltip. `:where()`
+   never wins, so an explicit positioning utility on the element still applies - and
+   an absolutely positioned element is already a containing block for its own ::after,
+   so the rim below keeps working either way. */
+:where(.mat-panel, .mat-card, .mat-overlay) {
+  position: relative;
+}
+
+/* The pointer light lives only on the discrete surfaces the cursor points AT, never on
+   .mat-panel, and that is a measured decision rather than an aesthetic one.
+   Measured over CDP, the light costs one backdrop-filter re-raster per frame, and it
+   costs the same whether the glow is 120px or 300px across -- turning the panel's
+   backdrop-filter off takes the cost to zero, as does not painting the light at all,
+   while writing the custom properties is free. So the price is the blur, not the glow.
+   On a panel that price would be PERMANENT: the cursor rests over a panel essentially
+   all the time, so the light would be visible and repainting continuously. On a card it
+   is occasional -- you point at an object, it lights, you move on. A card is also the
+   reading the effect wants: light appears where you point.
+
+   Walls on that measurement: this box has no GPU (glRenderer is "Microsoft Basic Render
+   Driver", WARP; gpu_compositing and rasterization are both software), so the absolute
+   frame times are worst-case CPU and must not be extrapolated. Only the relationships
+   above are trustworthy. */
+:where(.mat-card, .mat-overlay) {
+  /* Where the pointer light currently is, in element-local pixels. Written by
+     services/glassLight.ts on pointermove. The default is far OUTSIDE the box rather
+     than 50%: `--glass-light` is a fixed radius, so a centred default would light the
+     surface before the pointer ever went near it. Off-box means the gradient resolves
+     to nothing until the cursor actually arrives. */
+  --glass-x: -9999px;
+  --glass-y: -9999px;
+}
+
+.mat-panel,
+.mat-card,
+.mat-overlay {
+  background-image: linear-gradient(180deg, var(--glass-sheen), transparent 38%);
+  background-repeat: no-repeat;
+}
+
+.mat-panel::after,
+.mat-card::after,
+.mat-overlay::after {
+  content: '';
+  position: absolute;
+  /* ⚠️ `inset: 0` is measured from the containing block's PADDING box. That is the correct
+     place for the ring ONLY because the materials no longer have a border, so the padding
+     box IS the border box (see the note on the material rules below). If a border is ever
+     added back, this lands 1px inside the element's real edge and the card shows two
+     edges again. */
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--glass-edge);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* M1 — page panels. The only material that blurs the SCENE, so it carries the
+   largest blur radius. */
+.mat-panel {
+  background-color: var(--surface-1);
+  backdrop-filter: blur(var(--blur-panel)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--blur-panel)) saturate(160%);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-panel);
+  border-radius: 16px;
+}
+
+/* M2 — nested cards / result cards. Deliberately NO backdrop-filter: a card always
+   sits inside a panel or overlay that has already blurred the scene, so its own
+   backdrop is smooth and a second blur buys nothing visible while costing a whole
+   render surface. That is the real reason for this rule (it used to read "perf
+   budget"), and it is why M2 can afford to be the most transparent material.
+   The 1px transparent border is NOT decoration -- the rim is drawn inside it. */
+.mat-card {
+  background-color: var(--surface-2);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-card);
+  border-radius: 12px;
+}
+
+/* The pointer light, on all three materials (replaces v4.3's fixed-path sweep).
+   The sweep was mechanical: a band at a fixed angle travelling a fixed path, the same
+   on every card no matter where the cursor was. A light source should be where the
+   light IS. CSS cannot see the pointer, so services/glassLight.ts writes --glass-x/-y;
+   the gradient just reads them.
+   The glow is a BACKGROUND on an inset:0 pseudo-element rather than a translated blob,
+   so it can never leave the box -- which is why no card needs `overflow: hidden`, and
+   cards host dropdowns and tooltips that must be allowed to escape.
+   NOTE: painting on top of the element's contents is exactly why this layer is NOT drawn
+   while the pointer is over a text-entry control -- it covers the caret and the I-beam
+   cursor, and the field is the one place where the pointer's own glyph is the thing you
+   are aiming with. That exclusion is enforced in glassLight.ts by parking --glass-x/-y:
+   `opacity` alone cannot express it, because the surface IS still hovered. */
+.mat-card::before,
+.mat-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(
+    circle var(--glass-light) at var(--glass-x) var(--glass-y),
+    var(--glass-glow),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 240ms ease-out;
+}
+
+.mat-card:hover::before,
+.mat-overlay:hover::before {
+  opacity: 1;
+}
+
+/* M3 — dialogs / dropdowns / overlays. Blurs because a dropdown or dialog can open
+   over content that is NOT already inside a blurred panel. */
+.mat-overlay {
+  background-color: var(--surface-3);
+  backdrop-filter: blur(var(--blur-overlay)) saturate(160%);
+  -webkit-backdrop-filter: blur(var(--blur-overlay)) saturate(160%);
+  border: 1px solid transparent;
+  box-shadow: var(--shadow-overlay);
+  border-radius: 16px;
+}
+
+/* A material that needs to clip its contents must use THIS instead of `overflow: hidden`.
+   `overflow: hidden` clips descendants at the PADDING box -- and because every material has
+   a 1px transparent border, the padding box is 1px inside the element's real edge, which is
+   exactly where the rim is drawn (see the note above the material rules). The panel would
+   silently lose its hairline and stop looking like the same material as the cards.
+   `overflow: clip` with a 1px clip margin moves the clip edge out to the border box: one
+   band further, enough for the rim and no more.
+   Measured over 6 screens x 2 themes by pixel-diffing the whole window: the only pixels
+   that change are the rim's own -- about 4300 along the straight edges plus ~90 on the
+   corner arcs, where the ring's antialiasing sits 3-5px from the edge bounding box.
+   NOTHING from the contents leaks out. Releasing the clip entirely instead changes hundreds
+   of pixels of real content, so the clip is doing a job and this is not "removing" it.
+   ⚠️ Two things to keep in mind: (1) it is not a scroll container, so an element that has
+   to SCROLL keeps `overflow-y-auto` and therefore cannot have a rim at its true edge --
+   `AudioTagMenu`'s card is that case and shows only the shadow edge; (2) never put
+   `mat-clip` and an `overflow-*` utility on the same element, they would fight, and
+   design:check fails on that combination. */
+.mat-clip {
+  overflow: clip;
+  overflow-clip-margin: 1px;
+}
+
+/* ============ Title bar ============ */
+
+.titlebar {
+  -webkit-app-region: drag;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px 0 14px;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+.titlebar-btn {
+  -webkit-app-region: no-drag;
+  width: 36px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background var(--dur-fast, 0.12s) ease-out, color 0.12s ease-out;
+  border: none;
+  background: transparent;
+  color: var(--text-2);
+}
+
+.titlebar-btn:hover { background: var(--surface-hover); color: var(--text-1); }
+/* 选中态:设置中心是整页视图,需要让用户看得出当前正停在它上面 */
+.titlebar-btn.active { background: var(--accent-soft); color: var(--accent); }
+.titlebar-btn.active:hover { background: var(--accent-soft); color: var(--accent-strong); }
+.titlebar-btn.close:hover { background: var(--danger); color: #fff; }
+
+/* ============ Motion ============ */
+
+/* Welcome hero word reel (v4.1): the words sit in a column, one per row, and the
+   whole column slides up by exactly one row per step -- that IS the "flip up".
+   --reel-item-h MUST equal text-3xl's line-height (2.25rem), otherwise the
+   neighbouring word peeks through the mask. The component multiplies this variable
+   rather than using a percentage: translateY(%) resolves against the TRACK's own
+   height (8 rows = 288px), so -100% would throw the column eight words off screen. */
+.word-reel {
+  --reel-item-h: 2.25rem;
+  display: inline-block;
+  height: var(--reel-item-h);
+  overflow: hidden;
+  /* An overflow:hidden inline-block takes its baseline from its bottom edge, so
+     bottom-aligning it is what keeps the reel words on the same baseline as the
+     static text either side. Removing this silently lifts the word ~4px. */
+  vertical-align: bottom;
+}
+
+.word-reel-track {
+  display: block;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.word-reel-item {
+  display: block;
+  height: var(--reel-item-h);
+  line-height: var(--reel-item-h);
+}
+
+/* Respect the OS setting: stop cycling entirely. An instant swap every couple of
+   seconds is still a moving target and would keep pulling the eye back. */
+@media (prefers-reduced-motion: reduce) {
+  .word-reel-track { transition: none; }
+}
+
+/* 工具条手风琴触发态:soft 填充 + 半强描边,亮暗主题下均清晰可辨 */
+.trigger-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+
+.recording-pulse { animation: pulse 1.4s ease-in-out infinite; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.06); }
+}
+
+.waveform-bar {
+  display: inline-block;
+  width: 3px;
+  background: var(--accent-2);
+  border-radius: 2px;
+  animation: wave 0.9s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%, 100% { height: 5px; }
+  50% { height: 20px; }
+}
+
+/* The voice card's watermark: the sample's own peak envelope, drawn under the name and the
+   date. Opacity is a per-theme token rather than a Tailwind step because the two themes need
+   different numbers (light 5%, dark 10%) and the reason is measurable, not taste - see the
+   token comments in `:root` / `[data-theme="dark"]` and DESIGN.md §5.13. */
+.voice-card-wave {
+  opacity: var(--wave-mark-opacity);
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-pop-in { animation: popIn 0.22s cubic-bezier(0.32, 0.72, 0.24, 1); }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in { animation: fadeIn 0.18s ease-out; }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateX(12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.animate-slide-down { animation: slideDown 0.24s cubic-bezier(0.32, 0.72, 0.24, 1); }
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--surface-hover) 25%, var(--surface-active) 45%, var(--surface-hover) 65%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* ============ Scrollbar ============ */
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--hairline-strong);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover { background-color: var(--text-3); background-clip: content-box; }
+
+/* ============ Range input (audio seek) ============ */
+
+.seek-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--hairline-strong);
+  outline: none;
+  cursor: pointer;
+}
+
+.seek-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition: transform 0.12s ease-out;
+}
+
+.seek-range:hover::-webkit-slider-thumb { transform: scale(1.25); }
+
+/* Text inputs inherit theme font */
+input, textarea, select, button { font-family: inherit; }
+
+/* WebView2/Chromium draws its own password reveal toggle inside <input type=password>.
+   We render our own eye button and keep the field's type under React state; without this
+   reset the native button adds a second eye and can flip the field to text while our
+   icon still says "hidden". `::-ms-reveal` is the supported hook in Edge/WebView2. */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
+}
+
+/* Text-entry cursor. The element list is "where the browser shows an I-beam", which is
+   the same rule `services/glassLight.ts` uses to decide where the pointer light must not
+   be painted (`TEXT_ENTRY` there) -- the two are the same concept and must be kept in
+   step, because a field that gets the custom cursor should not also be getting the light.
+   Neither can read the other: CSS cannot read a TS array, and a computed-style read per
+   pointermove is exactly the cost glassLight.ts is built to avoid. The harness checks
+   samples from both sides instead (see DESIGN.md §9.2-19).
+   `:where()` keeps this at zero specificity, so an explicit `cursor-*` utility on a field
+   still wins, while the rule still beats `cursor: pointer` INHERITED from a clickable
+   ancestor -- an inherited value never beats a declaration made on the element itself. */
+:where(
+  textarea,
+  [contenteditable=''],
+  [contenteditable='true'],
+  input:not([type='button']):not([type='submit']):not([type='reset']):not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']):not([type='color'])
+) {
+  cursor: var(--cursor-text);
+}

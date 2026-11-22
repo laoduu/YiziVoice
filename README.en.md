@@ -20,7 +20,7 @@ It packs `3 core abilities`, `9 preset voices`, `12 preset styles`, `3 style-wri
 
 ## Three abilities: text in, sound out; sound in, text out
 
-![Three abilities](./assets/readme/workflow.svg)
+![Three abilities](./assets/readme/workflow.en.svg)
 
 TTS, voice cloning, and STT share one workspace, one voice library, one history. Clone a voice on the left, use it to read on the right. Generated audio can be downloaded or restored into the task for another iteration.
 

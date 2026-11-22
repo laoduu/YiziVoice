@@ -1,121 +1,170 @@
 # YiziVoice
 
-[![CI](https://github.com/laoduu/YiziVoice/actions/workflows/ci.yml/badge.svg)](https://github.com/laoduu/YiziVoice/actions/workflows/ci.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
-[![Release](https://img.shields.io/github/v/release/laoduu/YiziVoice)](https://github.com/laoduu/YiziVoice/releases)
+![YiziVoice — 一站式语音工作台](./assets/readme/workflow.svg)
 
-**面向内容创作者的免费 AI 语音工作台**——文生音、音色克隆、音转文一站式完成，基于小米 MiMo 系列模型，覆盖短视频、有声书、播客、游戏配音等场景。
+[简体中文](./README.md) | [English](./README.en.md)
 
-桌面端（Windows / macOS / Linux），安装包约 10MB，本地存储、离线可用（生成需联网调用 API）。
+**官方网站：** https://voice.yizigpt.com
 
-> English version: [README.en.md](./README.en.md)
+YiziVoice 是一款以「声音」为中心的跨平台桌面语音工具。一段文案、一段录音，就能完成 `文生音`、`音色克隆`、`音转文`——三种能力在同一个工作台里彼此衔接，不用再来回切工具、传文件。
 
-## 功能
+- **Windows**：NSIS 安装包，双击安装，免管理员权限
+- **macOS**：通用二进制 DMG，Intel 与 Apple Silicon 均原生运行
+- **Linux**：Debian 系 `deb` 与免安装 `AppImage`（AMD64）
 
-| 功能 | 说明 | 底层模型 |
-|------|------|---------|
-| **文生音** | 输入文案、选择音色，一键生成语音 | `mimo-v2.5-tts` / `mimo-v2.5-tts-voiceclone` |
-| **音色克隆** | 录音、上传音频或文字描述，复刻/设计音色并保存为角色，支持分类管理 | `mimo-v2.5-tts-voiceclone` / `mimo-v2.5-tts-voicedesign` |
-| **音转文** | 录音或上传音频，自动转为文字 | `mimo-v2.5-asr` |
-| **AI 文本模型** | 设置内获取并选择文本模型，用于「AI 生成风格描述」 | 可配置，默认 `mimo-v2.6-flash` |
-| **风格控制** | 音频标签 / 一段话描述 / 导演演绎三种写法，12 种预设风格 + 自定义 | - |
-| **自然语言控制** | 用自然语言描述风格、语速、情绪，AI 一键扩展为详细风格指令 | `mimo-v2.6-flash` |
-| **历史记录** | 自动保存所有生成记录，支持播放、下载、复制、还原任务 | - |
-| **生成状态还原** | 点击历史记录完整还原生成时的编辑器状态，并把音频放回工作台 | - |
+为什么做 YiziVoice？配音这件事，长期以来的流程是：写稿 → 找配音 → 等档期 → 听效果 → 不满意 → 再改再配。市面上的 TTS 工具，要么声音生硬，要么导出要会员，要么克隆门槛高。小米 MiMo 系列开源之后，中文表现力、多情感朗读、声音克隆都上了一个台阶——于是便有了 YiziVoice，并坚持三件事：**声音自然**，**上手简单**，**数据本地**。
 
-### 预置音色（9 个）
+它覆盖 `3 种核心能力`、`9 个预置音色`、`12 种预设风格`、`3 种风格写法`、`1 个可管理的音色库`，安装包只有 **10MB** 出头。写完稿立刻听到成品配音，不满意就换个风格再生成——配音这件事，可以变成几分钟内完成的闭环。
 
-- 中文：MiMo-默认、冰糖、茉莉、苏打、白桦
-- 英文：Mia、Chloe、Milo、Dean
+---
 
-另有出厂演示音色库（玲玲姐、山山大叔等虚构角色），可在应用内试听与管理。
+## 三大能力：文本进去声音出来，声音进去文字出来
+
+![三大能力](./assets/readme/workflow.svg)
+
+文生音、音色克隆、音转文共享同一个工作台、同一套音色库、同一份历史记录。左边克隆好的声音，右边就能用来朗读；朗读生成的音频，一键下载或还原任务继续改。
+
+| 能力 | 一句话定位 | 入口 | 适合 |
+|------|-----------|------|------|
+| **文生音** | 输入文案，选音色，一键生成语音 | `Ctrl+2` | 短视频配音、有声书、课件朗读 |
+| **音色克隆** | 20 秒样本复刻声音，存为可复用角色 | `Ctrl+1` | 固定栏目、个人 IP、批量配音 |
+| **音转文** | 录音或上传音频，自动转成文字 | `Ctrl+3` | 会议记录、采访整理、字幕初稿 |
+
+### 文生音：写完稿，立刻听到声音
+
+- 9 个预置音色开箱即用（中文 5 + 英文 4），克隆音色可随时加入候选
+- 三种风格写法，同一时间只发一种指令，不会互相打架：
+  - **音频标签控制**：12 种预设风格胶囊 + 开场风格标签 `(风格)` + 内嵌标签 `[音频效果]`，自定义标签可增删改
+  - **一段话描述**：用自然语言说清语速、情绪、年龄，AI 扩展为详细风格指令
+  - **导演演绎**：角色 / 场景 / 指导三栏，贴合 MiMo 导演模式 API
+- **AI 生成风格描述**：填几个关键字（如「考试少年」「公关总监」），模型补全完整描述，只动生成风格不动正文
+- 生成完成即可播放、下载 WAV；结果与设置同滚动区，小窗口也放得下
+
+### 音色克隆：你的声音，随时待命
+
+- 三种采集方式：**开始录音**（20 秒内）/ **上传文件**（WAV/MP3/WebM/OGG/FLAC，≤10MB）/ **设计音色**（纯文字描述生成）
+- 设计音色不需样本：描述音色特质，模型直接合成一个新声音，试听文本可自动生成
+- 角色管理：命名、分类（内置 8 类，可增删）、AI 生成描述与试听文本
+- **导出 / 导入 JSON**：把音色库打包发给协作者，对方导入即用，无需重新录制
+
+### 音转文：说了什么，落成文字
+
+- 录音或上传，自动识别中文、英文及方言口音，也可指定语言
+- 转写结果可复制、可编辑；录音来源的音频会一并保存，可回放、下载
+- 与文生音共用历史记录，整理好的文字稿直接粘进文生音继续用
+
+### 共享能力：三大能力同享
+
+- **历史与还原**：每次生成自动存档，左侧栏随时翻。点「还原任务」，把当时的模式、风格、文案、音频完整装回工作台——改一改再生成，不用从头填
+- **风格控制**：12 种预设 + 自定义，胶囊式选择，所见即所得
+- **本地与安全**：数据全在 `文档/YiziVoice/`，API Key 只进系统钥匙串（Windows 凭据管理器 / macOS Keychain / Linux Secret Service），**不落明文、不上传、无遥测**
+
+---
+
+## 预置音色
+
+| 语言 | 音色 | | 语言 | 音色 |
+|------|------|-|------|------|
+| 中文 | MiMo-默认 · 冰糖 · 茉莉 | | 英文 | Mia · Chloe |
+| 中文 | 苏打 · 白桦 | | 英文 | Milo · Dean |
+
+另有出厂演示音色库（玲玲姐、山山大叔、醇厚旁白等虚构角色），克隆页可直接试听，也可以全部换成你自己的声音。
+
+---
 
 ## 安装
 
-从 [GitHub Releases](https://github.com/laoduu/YiziVoice/releases) 下载对应平台安装包（国内用户也可从[官网](https://voice.yizigpt.com)的网盘镜像下载）。
+从 [GitHub Releases](https://github.com/laoduu/YiziVoice/releases) 下载对应平台安装包（国内用户也可从[官网](https://voice.yizigpt.com)网盘镜像下载）。
 
 | 平台 | 产物 | 安装 |
 |------|------|------|
-| **Windows** | `YiziVoice_<版本>_x64-setup.exe` | 双击运行，向导式安装，免管理员权限 |
-| **macOS** | `YiziVoice_<版本>_universal.dmg` | 打开拖入 Applications。未签名：首次打开若被 Gatekeeper 拦截，右键选「打开」或执行 `xattr -cr /Applications/YiziVoice.app` |
-| **Linux** | `YiziVoice_<版本>_amd64.deb`（推荐） | `sudo apt install ./YiziVoice_<版本>_amd64.deb`（自动补依赖） |
-| **Linux** | `YiziVoice_<版本>_amd64.AppImage`（实验性） | `chmod +x` 后直接运行，需系统有 libfuse2 |
+| **Windows** | `YiziVoice_<版本>_x64-setup.exe` | 双击运行，向导式安装 |
+| **macOS** | `YiziVoice_<版本>_universal.dmg` | 拖入 Applications。被 Gatekeeper 拦截时右键 → 打开，或 `xattr -cr /Applications/YiziVoice.app` |
+| **Linux** | `YiziVoice_<版本>_amd64.deb` | `sudo apt install ./YiziVoice_<版本>_amd64.deb` |
+| **Linux** | `YiziVoice_<版本>_amd64.AppImage` | `chmod +x` 后运行（实验性，需 libfuse2） |
 
-> Windows 上若弹 SmartScreen 提示（未签名安装器），选「更多信息 → 仍要运行」。
+---
 
 ## 快速开始
 
-1. 启动 YiziVoice，点击「设置」→ 填入 **MiMo API Key** → 保存
-2. 在左侧选择功能（文生音 / 音色克隆 / 音转文）
-3. 输入文本或录音 → 点击生成 → 试听 / 下载
+1. 启动 YiziVoice → **设置** → 填入 MiMo API Key → 保存
+2. 左侧选择能力（`Ctrl+1/2/3` 快速切换）
+3. 输入文本或录音 → 生成 → 试听 / 下载 / 还原任务
 
 ### 获取 API Key 与计费
 
-前往 [MiMo 控制台](https://platform.xiaomimimo.com/console/balance) 注册并获取 API Key。注册时填写邀请码 `DHLC96` 可额外获得体验金。
+前往 [MiMo 控制台](https://platform.xiaomimimo.com/console/balance) 注册获取 Key。注册填邀请码 `DHLC96` 可得体验金。
 
 | 能力 | 计费 |
 |------|------|
-| MiMo-TTS 系列（文生音/克隆/设计） | **免费** |
-| MiMo-ASR（音转文） | 付费，需账户余额 |
-| MiMo-2.6 系列文本模型（AI 生成风格描述） | 付费，需账户余额 |
+| MiMo-TTS 系列（文生音 / 克隆 / 设计） | **免费** |
+| MiMo-ASR（音转文） | 付费，需余额 |
+| MiMo-2.6 文本模型（AI 生成风格描述） | 付费，需余额 |
 
-**API Key 安全**：Key 仅加密存储在本机系统凭据库（Windows 凭据管理器 / macOS Keychain / Linux Secret Service），不写入任何明文文件，也不会上传到任何服务器。设置页对 Key 只写不回显。
+**API Key 安全**：Key 仅加密存于本机系统凭据库，设置页只写不回显。详见 [SECURITY.md](./SECURITY.md)。
 
-## 使用指南
+---
 
-### 文生音
+## 快捷键
 
-1. 左侧导航点击「文生音」
-2. 选择音色：「中文音色」「英文音色」或「克隆音色」分组
-3. （可选）展开「语音设置」：音频标签控制（风格胶囊 / 开场风格标签 / 内嵌音频标签）或自然语言控制（一段话描述 / 导演演绎）
-4. 在「朗读文本」输入或粘贴文案
-5. 点击「生成语音」，完成后可播放或下载 WAV
+| 快捷键 | 功能 | 快捷键 | 功能 |
+|--------|------|--------|------|
+| `Ctrl+1` | 音色克隆 | `Ctrl+L` | 收起/展开左侧栏 |
+| `Ctrl+2` | 文生音 | `Ctrl+R` | 收起/展开右侧栏 |
+| `Ctrl+3` | 音转文 | `Ctrl+F` | 搜索历史记录 |
+| `Ctrl+,` | 设置中心 | `Esc` | 关闭弹窗 / 设置 |
 
-> 两种控制方式互斥，每次只发一种风格指令。
+---
 
-### 音色克隆
+## 目录结构
 
-1. 点击「音色克隆」
-2. 选择获取方式：**开始录音**（20 秒内）/ **上传文件**（WAV/MP3/WebM/OGG/FLAC，≤10MB）/ **设计音色**（文字描述生成）
-3. 确认后在弹窗中试听，填写角色名称、选择分类，保存到「我的音色库」
-4. 克隆音色可在「文生音」中选用；支持导出/导入 JSON 与协作者共享
-
-### 音转文
-
-1. 点击「音转文」
-2. 开始录音（或上传音频文件）
-3. 自动识别为文字，支持中文、英文及自动语言检测；录音可回放、下载与复制
-
-### 历史记录
-
-左侧栏自动保存所有生成记录：播放、下载、复制、**还原任务**（把生成时的完整状态装回编辑器）。数据存储在本地 `文档/YiziVoice/`，可在设置中重定向数据目录。
-
-## 数据与隐私
-
-- 所有数据（配置、音色、历史记录）保存在本地 `文档/YiziVoice/`，可整体迁移备份
-- API Key 只存系统凭据库，不落明文（见上文安全说明）
-- 生成音频需联网调用 MiMo API；文本与音频仅发往 `api.xiaomimimo.com`
-- 无遥测、无统计上报、无账号系统
-
-## 从源码构建
-
-**前置条件**
-
-- Node.js 18+
-- Rust stable（[rustup](https://rustup.rs)）
-- Windows：Visual Studio Build Tools（勾选「使用 C++ 的桌面开发」）
-- Linux：`libwebkit2gtk-4.1-dev`、`libdbus-1-dev` 等（见 [docs/releasing.md](./docs/releasing.md)）
-- macOS：Xcode Command Line Tools
-
-```bash
-git clone https://github.com/laoduu/YiziVoice.git
-cd YiziVoice
-npm install
-npm run tauri:dev     # 开发模式（热更新）
-npm run tauri:build   # 生产打包
+```
+YiziVoice/
+├── src/                  # React 前端
+│   ├── pages/            # 文生音 / 音色克隆 / 音转文
+│   ├── components/       # 布局、ui/ 基础组件、hub/ 设置中心
+│   └── services/         # API、配置、历史、桌面桥
+├── src-tauri/            # Tauri 2 Rust 壳
+│   ├── src/cmds/         # 36 条命令（配置/音色/风格/标签/历史/设置/存储/导出）
+│   └── src/secrets.rs    # API Key 系统凭据库
+├── docs/                 # 开发 / 设计 / 发版 / 陷阱文档
+├── default-config/       # 出厂预置配置（音色 / 风格 / 标签）
+├── scripts/              # 门禁：csp:check / design:check / release:check
+├── website/              # 官网单页
+└── .github/workflows/    # CI 与发版流水线
 ```
 
-**提交前门禁**（详见 [CONTRIBUTING.md](./CONTRIBUTING.md)）：
+---
+
+## 技术栈
+
+| 层级 | 技术 |
+|------|------|
+| 桌面框架 | Tauri 2 (Rust) |
+| 前端框架 | React 18 + TypeScript |
+| 样式方案 | Tailwind CSS + 液态玻璃材质体系 |
+| API 接入 | OpenAI 兼容 SDK（锁死 `api.xiaomimimo.com`） |
+| 密钥存储 | 系统钥匙串（keyring：DPAPI / Keychain / Secret Service） |
+| 构建工具 | Vite 5 |
+
+---
+
+## 开发
+
+### 环境要求
+
+- Node.js 18+
+- Rust (stable)
+- Windows 需 Visual Studio Build Tools（「使用 C++ 的桌面开发」）；Linux 需 `libwebkit2gtk-4.1-dev` 等
+
+### 启动
+
+```bash
+npm install
+npm run tauri:dev
+```
+
+### 提交前门禁
 
 ```bash
 npx tsc --noEmit        # 类型检查
@@ -124,84 +173,46 @@ npm run design:check    # 视觉规范静态门禁
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
-> ⚠️ **CSP 只在打包态生效**：`tauri dev` 不注入 CSP，涉及下载/资源加载的改动必须装包验证。
+> ⚠️ **CSP 只在打包态生效**：`tauri dev` 不注入 CSP，涉及下载/资源的改动必须装包复验。
 
-## 项目结构
+### 构建发布版
 
-```
-YiziVoice/
-├── src/                  # React 前端（页面 / 组件 / 服务）
-├── src-tauri/            # Tauri 2 Rust 壳（命令 / 密钥 / 打包配置）
-├── docs/                 # 开发文档（开发 / 规范 / 发版 / 陷阱）
-├── default-config/       # 出厂预置配置（音色 / 风格 / 标签）
-├── scripts/              # 门禁脚本（csp-check / design-check / release-check）
-├── website/              # 官网（单页静态）
-└── .github/workflows/    # CI 与发版流水线
+```bash
+npm run tauri:build                              # Windows NSIS
+npm run tauri:build -- --target universal-apple-darwin   # macOS DMG
+npm run tauri:build -- --bundles deb,appimage    # Linux
 ```
 
-更细的架构说明见 [docs/architecture.md](./docs/architecture.md)。
+更多开发细节见 [docs/development.md](./docs/development.md)；架构说明见 [docs/architecture.md](./docs/architecture.md)。
 
-## 快捷键
-
-| 快捷键 | 功能 |
-|--------|------|
-| `Ctrl+1 / 2 / 3` | 克隆音色 / 文生音 / 音转文 |
-| `Ctrl+L` / `Ctrl+R` | 收起/展开左侧栏 / 右侧栏 |
-| `Ctrl+F` | 搜索历史记录 |
-| `Ctrl+,` | 设置中心 |
-| `Esc` | 关闭弹窗 / 设置 |
-
-## 技术栈
-
-- **桌面**：[Tauri 2](https://tauri.app)（Rust + 系统 WebView）
-- **前端**：React 18 + TypeScript + Vite 5 + Tailwind CSS
-- **API**：OpenAI 兼容 SDK，接口锁定 `https://api.xiaomimimo.com/v1`
-- **密钥**：系统钥匙串（Windows DPAPI / macOS Keychain / Linux Secret Service）
-
-## 常见问题
-
-**Q：工具收费吗？**
-工具本身免费开源，仅需自备 MiMo API Key。TTS 系列模型免费调用；ASR 与 2.6 系列文本模型付费，需账户余额。
-
-**Q：升级后 API Key 为什么需要重填？**
-Key 一直加密存在系统凭据库，升级一般无需重填；仅从很老的版本跨级升级时可能需要输入一次。
-
-**Q：数据存在哪里？**
-本地 `文档/YiziVoice/`（可在设置中重定向）。删除该目录即恢复出厂状态。
-
-**Q：支持哪些平台？**
-Windows / macOS / Linux（AMD64）。详见上文安装表。
-
-**Q：克隆音色需要多长时间？**
-录音或上传后确认即复刻，通常几秒内出结果。
-
-更多问题见 [docs/faq.md](./docs/faq.md)。
+---
 
 ## 文档
 
 | 文档 | 内容 |
 |------|------|
 | [docs/development.md](./docs/development.md) | 开发环境、目录说明、门禁脚本 |
-| [docs/architecture.md](./docs/architecture.md) | 架构说明、桌面桥、数据目录 |
+| [docs/architecture.md](./docs/architecture.md) | 架构、桌面桥、数据目录、平台差异 |
 | [docs/design-system.md](./docs/design-system.md) | 视觉规范 v4（唯一事实来源） |
 | [docs/pitfalls.md](./docs/pitfalls.md) | 常见陷阱（CSP / keyring / StrictMode 等） |
 | [docs/releasing.md](./docs/releasing.md) | 打包与发版清单 |
+| [docs/faq.md](./docs/faq.md) | 常见问题 |
 | [CHANGELOG.md](./CHANGELOG.md) | 版本变更记录 |
+
+---
 
 ## 贡献
 
-欢迎 Issue 与 Pull Request！提交前请阅读 [CONTRIBUTING.md](./CONTRIBUTING.md) 并通过全部门禁。安全问题请见 [SECURITY.md](./SECURITY.md)。
+欢迎 Issue 与 Pull Request！提交前请阅读 [CONTRIBUTING.md](./CONTRIBUTING.md)。安全问题请走 [SECURITY.md](./SECURITY.md)。
 
-## 许可证
+## 许可
 
-[MIT License](./LICENSE)
-
-第三方组件许可见 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。
+[MIT License](./LICENSE) · 第三方组件许可见 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)
 
 ## 致谢
 
-- [小米 MiMo](https://platform.xiaomimimo.com) 系列开源模型——中文表现力与声音克隆能力的底座
-- [Tauri](https://tauri.app) / [React](https://react.dev) / [Vite](https://vite.dev) / [Tailwind CSS](https://tailwindcss.com) / [lucide](https://lucide.dev) 等优秀开源项目
+- [小米 MiMo](https://platform.xiaomimimo.com) 系列模型——中文表现力与声音克隆能力的底座
+- [Tauri](https://tauri.app) / [React](https://react.dev) / [Vite](https://vite.dev) / [Tailwind CSS](https://tailwindcss.com) / [lucide](https://lucide.dev)
 - 每一位试用、反馈、提 PR 的用户
 
 ---

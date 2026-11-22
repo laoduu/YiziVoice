@@ -360,6 +360,23 @@
     .cta-card .btn:hover { background: #f0f4ff; color: var(--blue); }
     .cta-card .cta-platform { margin: -6px 0 0; font-size: .8rem; color: rgba(255,255,255,0.75); }
     .cta-card .cta-code { margin: 0; }
+    /* GitHub 通道：三平台直链按钮组 */
+    .gh-btns { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; width: 100%; }
+    .gh-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 14px; border-radius: 999px; font-size: .82rem; font-weight: 600;
+      background: rgba(255,255,255,0.92); color: var(--blue); text-decoration: none;
+      border: 1px solid rgba(255,255,255,0.5); white-space: nowrap;
+      transition: background .18s, transform .18s, box-shadow .18s;
+    }
+    .gh-btn:hover { background: #fff; transform: translateY(-1px); box-shadow: 0 8px 18px rgba(0,0,0,0.18); }
+    .gh-btn:active { transform: scale(.97); }
+    .gh-btn .gh-size { font-size: .72rem; font-weight: 500; opacity: .65; }
+    .gh-fallback {
+      display: none; font-size: .78rem; color: rgba(255,255,255,0.8);
+      text-align: center; line-height: 1.6;
+    }
+    .gh-fallback a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
 
     /* Footer */
     .footer { padding: 40px 0 48px; border-top: 1px solid var(--line); }
@@ -729,11 +746,24 @@
         <p>下载 YiziVoice，立即开始语音克隆与文生音创作。</p>
         <div class="cta-card">
           <div class="cta-source">
-            <a class="btn" href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              GitHub Releases
-            </a>
-            <p class="cta-platform">Windows / macOS / Linux 版（推荐）</p>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" style="opacity:.9"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 2.87-.39c.97 0 1.95.13 2.87.39 2.18-1.49 3.14-1.18 3.14-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.26 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.2.67.8.56A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+            <p class="cta-platform" style="margin:0;font-weight:700;font-size:.95rem;color:#fff">GitHub 下载（推荐）</p>
+            <div class="gh-btns" id="gh-btns">
+              <a class="gh-btn" data-os="win" href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10 4.5v7H3zM11 4.3 21 3v8.5H11zM3 12.5h7v7L3 18.5zM11 12.5h10V21l-10-1.3z"/></svg>
+                Windows <span class="gh-size">exe</span>
+              </a>
+              <a class="gh-btn" data-os="mac" href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.9c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.9-1.4-.2-2.8.8-3.5.8-.7 0-1.9-.8-3.1-.8-1.6 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.9-2.2.9-1.3 1.3-2.5 1.3-2.6-.1 0-2.5-1-2.5-3.7zM14.2 5.9c.6-.8 1.1-1.9 1-3-1 0-2.2.6-2.8 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.8-1.5z"/></svg>
+                macOS <span class="gh-size">dmg</span>
+              </a>
+              <a class="gh-btn" data-os="linux" href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-2 0-3 1.6-3 3.5 0 1.4.2 2.3-.4 3.5-.7 1.3-2.3 3.3-2.6 5.5-.2 1.4.1 2.6.8 3.3-.3.7-.3 1.5 0 2.2.4.9 1.2 1.5 2 1.5.6 0 1.1-.2 1.5-.6.7.3 1.4.4 2 .4s1.3-.1 2-.4c.4.4.9.6 1.5.6.8 0 1.6-.6 2-1.5.3-.7.3-1.5 0-2.2.7-.7 1-1.9.8-3.3-.3-2.2-1.9-4.2-2.6-5.5-.6-1.2-.4-2.1-.4-3.5C15 3.6 14 2 12 2z"/></svg>
+                Linux <span class="gh-size">deb</span>
+              </a>
+            </div>
+            <p class="gh-fallback" id="gh-fallback">直链暂不可用时，请前往
+              <a href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">Releases 页</a>手动下载。</p>
           </div>
           <div class="cta-source">
             <a class="btn" href="https://pan.baidu.com/s/17v_sHe6_dAXytbnRoDSmfg?pwd=c4gs" target="_blank" rel="noopener">
@@ -831,6 +861,51 @@
       }
       buildWave('fwave-tts', 12, 3, 28, '#002FA7', '#F37021', 42, 30);
       buildWave('fwave-asr', 14, 4, 24, '#12899b', '#0ea5e9', 40, 28);
+    })();
+
+    // GitHub 下载通道：解析 latest release 的资产直链（失败静默回退到 Releases 页）
+    (function () {
+      var REPO = 'laoduu/YiziVoice';
+      var PATTERNS = {
+        win: /_x64-setup\.exe$/i,
+        mac: /_universal\.dmg$/i,
+        linux: /_amd64\.deb$/i
+      };
+      var btns = document.querySelectorAll('#gh-btns .gh-btn');
+      if (!btns.length || typeof fetch !== 'function') return;
+      fetch('https://api.github.com/repos/' + REPO + '/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
+        .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
+        .then(function (rel) {
+          var assets = rel.assets || [];
+          var matched = 0;
+          btns.forEach(function (btn) {
+            var os = btn.getAttribute('data-os');
+            var re = PATTERNS[os];
+            if (!re) return;
+            var asset = null;
+            for (var i = 0; i < assets.length; i++) {
+              if (re.test(assets[i].name)) { asset = assets[i]; break; }
+            }
+            if (asset) {
+              btn.href = asset.browser_download_url;
+              matched++;
+              var sizeEl = btn.querySelector('.gh-size');
+              if (sizeEl && asset.size) {
+                var mb = asset.size / 1048576;
+                sizeEl.textContent = (mb >= 10 ? mb.toFixed(0) : mb.toFixed(1)) + ' MB';
+              }
+            }
+          });
+          // 三个平台都解析不到 → 显示回退提示
+          if (matched === 0) {
+            var fb = document.getElementById('gh-fallback');
+            if (fb) fb.style.display = 'block';
+          }
+        })
+        .catch(function () {
+          var fb = document.getElementById('gh-fallback');
+          if (fb) fb.style.display = 'block';
+        });
     })();
 
     function copyCode(el) {

@@ -64,8 +64,12 @@ if (hardcoded.length) {
 // ---------- 2. CHANGELOG 必须有该版本条目 ----------
 const changelog = read('CHANGELOG.md')
 const escaped = version.replace(/\./g, '\\.')
-if (!new RegExp(`^## v${escaped}(\\s|$|（|\\()`, 'm').test(changelog)) {
-  failures.push(`CHANGELOG.md: 缺少 "## v${version}" 条目`)
+// 接受两种历史标题：`## v2.1.4（…）` 与 Keep-a-Changelog 风格 `## [2.1.4] - …`
+if (
+  !new RegExp(`^## v${escaped}(\\s|$|（|\\()`, 'm').test(changelog) &&
+  !new RegExp(`^## \\[${escaped}\\]`, 'm').test(changelog)
+) {
+  failures.push(`CHANGELOG.md: 缺少 "## v${version}" 或 "## [${version}]" 条目`)
 }
 if (/^## 未发布/m.test(changelog)) {
   warnings.push('CHANGELOG.md 仍有 "## 未发布" 节:发版时应改名为 "## vX.Y.Z（日期）"')

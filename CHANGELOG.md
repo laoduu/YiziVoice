@@ -5,58 +5,28 @@
 格式约定：版本标题 `## [X.Y.Z] - YYYY-MM-DD`；未发布版本标「开发中」；条目按 **新增 / 变更 / 修复 / 工程** 归类，保留现象-根因-修复-验证的复盘式写法。
 英文摘要见 [CHANGELOG.en.md](./CHANGELOG.en.md)（待补）。
 
-## [2.1.4] - 开发中
+## [2.1.4] - 2026-11-22
 
-### 新增:新版本检测与 Windows 在线升级
+### 新增
 
-- 接入 `tauri-plugin-updater`：Windows NSIS 安装版支持**一键在线升级**（passive 静默安装，
-  装完自动重启）；macOS / Linux / 便携版走手动通道——检测到新版本后跳转对应 Release 页下载。
-- **关于页新增「在线更新」区**：当前版本、检查更新、下载进度条、跳过此版本；
-  启动 4 秒后静默检查一次，发现新版 toast 提示一次（失败与「已是最新」不出声）。
-- 新增 `scripts/check-updater.mjs`（发版门禁：pubkey/endpoints/installMode）与
-  `scripts/make-manifest.mjs`（生成 latest.json 清单）；release.yml Windows 腿注入
-  `TAURI_SIGNING_PRIVATE_KEY` 并在产物上传后自动发布清单。
-- 签名密钥对由 `npx tauri signer generate` 生成：公钥在 `tauri.conf.json plugins.updater`，
-  **私钥须存入 GitHub Secrets（TAURI_SIGNING_PRIVATE_KEY），勿提交仓库**。
+- **界面多语言**：支持简体中文 / English 即时切换（设置 → 界面语言），全应用按钮、提示、教程同步翻译
+- **Windows 在线升级**：关于页可检查新版本，一键下载安装并自动重启，无需手动换包
+- **关于页「在线更新」**：显示当前版本、检查更新、下载进度，可跳过某个版本
+- **下载统一入口**：官网与 README 均改为 GitHub Releases 单一链接，Windows / macOS / Linux 同一入口
 
-### 新增:界面多语言（自建 i18n，中英双语）
+### 优化
 
-- 新增 `src/i18n/` 轻量本地化层（无第三方依赖）：`core.ts`（翻译/持久化）+ `react.tsx`
-  （`useI18n()`）+ `locales/zh-CN|en/` 分域词典（common/tts/clone/asr/settings/tutorial/
-  about/history/ui/errors/services 11 域）。zh-CN 为键源，`t(key, vars)` 支持 `{name}` 插值；
-  en 与 zh 键集经脚本核对完全一致（各 454 键），占位符两侧对齐。
-- **设置页新增「界面语言」选项**（位于接口密钥上方）：简体中文 / English 分段切换，即时生效，
-  持久化到 `settings.lang` + localStorage（与 theme 同模式，首帧无闪烁）。
-- 全应用用户可见文案（按钮/提示/占位符/对话框/Toast/空态/教程/关于）已键化；
-  注释保留中文。以下**刻意不译**：AI 提示词载荷（voicedesign/NL prompt）、导演模式 wire
-  format（`角色：`/`场景：`/`指导：` 前缀，历史 schema 契约）、PRESET_VOICES 数据字段
-  （音色名/`lang: '中文'` 比较键）、产品名（YiziVoice/MiMo/一路狂标等）。
-- 同步修正 `design:check` 词汇轮播词数检测（兼容键化后的 `key:` 形态）。
+- **README 重写**（中英双语）：新增品牌色架构动图与真实界面截图，章节重排为产品门面结构
+- **官网体验**：导航新增 GitHub 入口，下载区与更新日志版式对齐，新增 v2.1.4 更新说明
 
-### 文档:README 重写与架构动图
+### 修复
 
-- README / README.en 借鉴 YiziMarkdown 的写法重写：品牌色 SVG 动图（`assets/readme/workflow.svg`）
-  开篇即呈现三大能力与工作台关系；章节改为「三大能力 → 预置音色 → 安装 → 快速开始 → 快捷键 →
-  目录结构 → 技术栈 → 开发 → 文档 → 贡献/许可/致谢」的门面结构，功能表采用「一句话定位 / 入口 / 适合」三列。
-- 新增 `assets/readme/workflow.svg`：1200×675 动效架构图（卡片弹入、蚂蚁线、粒子流、枢纽彗星环、
-  波形呼吸），品牌双色克莱因蓝 `#002FA7` + 爱马仕橙 `#F37021`，支持 `prefers-reduced-motion`。
+- **Linux 历史播放**：从历史记录还原任务后，点播放不再提示「音频播放失败，请尝试下载后播放」
 
-### 修复:Linux 还原历史后点播放报「音频播放失败」
+### 其他
 
-- **现象**:从历史记录还原任务后，工作台结果区点播放提示「音频播放失败，请尝试下载后播放」；
-  左侧历史列表直接播放正常，Windows 全程正常。
-- **根因**:Linux 历史回放曾把 Rust 读出的字节拼成 **blob URL**。`AudioPlayer` 在
-  `useEffect` cleanup 里对当前 `src` 调用 `URL.revokeObjectURL`；React StrictMode 挂载期
-  会 mount → cleanup → remount，cleanup 把刚挂上的 blob 提前吊销，随后 `el.play()` 必失败。
-  左侧栏是在点击时才 `createObjectURL`，不经过该挂载 cleanup，所以不受影响；Windows 走
-  asset URL，`releaseAudioSrc` 只碰 `blob:`，也不受影响。
-- **修复**:`getHistoryAudioSrc` 在 Linux 改为返回 **`data:audio/wav;base64,...`**
-  （与新生成结果同一形态，无需释放生命周期）；`AudioPlayer` cleanup 改为只释放 effect
-  闭包捕获的旧 `src`，不再读 `el.src`（React 会在 cleanup 前改写 DOM，读 `el.src`
-  会误伤新地址）。`releaseAudioSrc` 仍只 revoke `blob:`，作兜底保留。
-- **验证**:`cargo test --locked --offline` 13 项通过；`npx tsc --noEmit` / `npm run csp:check` /
-  `npm run design:check` / `npm run build` 全绿；`tauri:dev` 热更新后 Vite 已提供
-  `data:audio/wav;base64,...` 路径（`historyService` 实测）。桌面端还原→播放请在 Linux 客户端点验。
+- **开源就绪**：MIT 许可证、贡献指南、安全策略、第三方声明与开发文档（docs/）
+- **出厂音色**：演示音色改为虚构角色名，避免与真实人物同名
 
 ## [2.1.3] - 2026-11-14
 

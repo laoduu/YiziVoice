@@ -79,11 +79,22 @@ jobs:
           name: windows-installer
           path: src-tauri/target/release/bundle/nsis/*.exe
 
+      # Release 正文 = CHANGELOG 该版本段（用户向：新增/优化/修复/其他），
+      # 不用 generate_release_notes（那是 commit 列表，对用户无意义）
+      - id: notes
+        shell: bash
+        run: |
+          ver=$(node -p 'require("./package.json").version')
+          out=release-notes.md
+          awk -v pat="## [$ver]" 'index($0, pat)==1 {f=1; next} /^## / && f {exit} f' CHANGELOG.md > "$out"
+          if [ ! -s "$out" ]; then echo "See CHANGELOG.md" > "$out"; fi
+          echo "notes: $(head -3 "$out")"
+
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           files: src-tauri/target/release/bundle/nsis/*.exe
-          generate_release_notes: true
+          body_path: release-notes.md
 
       # 在线更新清单 latest.json：必须在安装包上传之后再传 ——
       # 客户端拿到清单就立刻去下产物，清单先到会撞上 404。
@@ -100,7 +111,7 @@ jobs:
           test -f "${setup}.sig" || { echo "::error::找不到 ${setup}.sig —— 构建没打开 createUpdaterArtifacts"; exit 1; }
           # 从 CHANGELOG 截取该版本段作为更新说明(标题形如 "## [2.1.4] - ...")
           notes_file=$(mktemp)
-          awk -v ver="$ver" 'BEGIN{f=0} $0 ~ "^## \[" ver "\]" {f=1;next} /^## \[/ {f=0} f' CHANGELOG.md > "$notes_file" || true
+          awk -v pat="## [$ver]" 'index($0, pat)==1 {f=1; next} /^## / && f {exit} f' CHANGELOG.md > "$notes_file" || true
           node scripts/make-manifest.mjs \
             --version "$ver" \
             --notes "$notes_file" \
@@ -160,10 +171,22 @@ jobs:
           name: macos-dmg
           path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
 
+      # Release 正文 = CHANGELOG 该版本段（用户向：新增/优化/修复/其他），
+      # 不用 generate_release_notes（那是 commit 列表，对用户无意义）
+      - id: notes
+        shell: bash
+        run: |
+          ver=$(node -p 'require("./package.json").version')
+          out=release-notes.md
+          awk -v pat="## [$ver]" 'index($0, pat)==1 {f=1; next} /^## / && f {exit} f' CHANGELOG.md > "$out"
+          if [ ! -s "$out" ]; then echo "See CHANGELOG.md" > "$out"; fi
+          echo "notes: $(head -3 "$out")"
+
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           files: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          body_path: release-notes.md
 
   linux:
     if: github.event_name != 'workflow_dispatch' || inputs.job == 'all' || inputs.job == 'linux'
@@ -230,10 +253,21 @@ jobs:
             src-tauri/target/release/bundle/deb/*.deb
             src-tauri/target/release/bundle/appimage/*.AppImage
 
+      # Release 正文 = CHANGELOG 该版本段（用户向：新增/优化/修复/其他），
+      # 不用 generate_release_notes（那是 commit 列表，对用户无意义）
+      - id: notes
+        shell: bash
+        run: |
+          ver=$(node -p 'require("./package.json").version')
+          out=release-notes.md
+          awk -v pat="## [$ver]" 'index($0, pat)==1 {f=1; next} /^## / && f {exit} f' CHANGELOG.md > "$out"
+          if [ ! -s "$out" ]; then echo "See CHANGELOG.md" > "$out"; fi
+          echo "notes: $(head -3 "$out")"
+
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           files: |
             src-tauri/target/release/bundle/deb/*.deb
             src-tauri/target/release/bundle/appimage/*.AppImage
-          generate_release_notes: true
+          body_path: release-notes.md

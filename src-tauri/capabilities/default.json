@@ -1,7 +1,9 @@
 {
   "identifier": "default",
   "description": "YiziVoice main window capabilities",
-  "windows": ["main"],
+  "windows": [
+    "main"
+  ],
   "permissions": [
     "core:default",
     "core:window:allow-minimize",
@@ -11,6 +13,7 @@
     "core:window:allow-close",
     "core:window:allow-start-dragging",
     "dialog:default",
-    "opener:default"
+    "opener:default",
+    "updater:default"
   ]
 }

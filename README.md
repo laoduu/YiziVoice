@@ -1,6 +1,6 @@
 # YiziVoice
 
-![YiziVoice — 一站式语音工作台](./assets/readme/workflow.svg)
+![YiziVoice 界面一览](./assets/readme/index.webp)
 
 [简体中文](./README.md) | [English](./README.en.md)
 

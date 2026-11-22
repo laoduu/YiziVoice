@@ -1,6 +1,6 @@
 # YiziVoice
 
-![YiziVoice — one-stop voice studio](./assets/readme/workflow.svg)
+![YiziVoice interface](./assets/readme/index.webp)
 
 [简体中文](./README.md) | [English](./README.en.md)
 

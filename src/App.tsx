@@ -9,9 +9,10 @@ import { LeftPane } from './components/LeftPane'
 import { Welcome } from './components/Welcome'
 import { HubPage, type HubTab } from './components/hub/HubPage'
 import { Tooltip } from './components/ui/Tooltip'
-import { ToastProvider } from './components/Toast'
+import { ToastProvider, useToast } from './components/Toast'
 import { I18nProvider, useI18n, type MessageKey } from './i18n/react'
 import { migrateLegacySettings } from './services/storage'
+import { checkOnStartup, useUpdateState } from './services/updateStore'
 import type { TtsHistoryEntry } from './services/historyTypes'
 
 export type Tool = 'home' | 'tts' | 'asr' | 'clone'
@@ -74,6 +75,23 @@ export function PaneToggle({ side, open, onToggle }: { side: 'left' | 'right'; o
 
 function DesktopShell() {
   const { t: tr } = useI18n()
+  const { showToast } = useToast()
+  const updateState = useUpdateState()
+  const updateToastShown = useRef(false)
+
+  // 启动 4 秒后静默检查一次（dev / 浏览器下 updateStore 内部短路）
+  useEffect(() => {
+    const timer = setTimeout(() => { void checkOnStartup() }, 4000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  // 发现新版本时 toast 一次（跳过的版本不打扰）
+  useEffect(() => {
+    if (updateState.status === 'available' && updateState.update && !updateToastShown.current) {
+      updateToastShown.current = true
+      showToast(tr('update.availableToast', { version: updateState.update.version }), 'info')
+    }
+  }, [updateState.status, updateState.update, showToast, tr])
   const [activeTool, setTool] = useState<Tool>('home')
   const [resetSignal, setResetSignal] = useState(0)
   const pendingTtsEntry = useRef<TtsHistoryEntry | null>(null)

@@ -17,6 +17,11 @@ tauri-build = { version = "2", features = [] }
 tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
+# 在线更新：官方 updater，只服务 Windows NSIS 安装版（其余平台走手动通道）
+tauri-plugin-updater = "2"
+# 手动查清单（非 Windows 平台的版本提示）——只 GET + JSON，不要 stream
+reqwest = { version = "0.12", default-features = false, features = ["json", "default-tls"] }
+serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 base64 = "0.22"
 keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service"] }
@@ -24,6 +29,10 @@ keyring = { version = "3", features = ["apple-native", "windows-native", "sync-s
 # Linux 专用:直接操作底层 WebKitGTK 视图。wry 只开了 WebGL/WebAudio,
 # 既没有 set_enable_media_stream 也没接 permission-request 信号,
 # 于是 getUserMedia 被静默拒绝(不弹授权、录音直接无效)。见 linux_media.rs。
+[target.'cfg(windows)'.dependencies]
+# 安装形态判定（NSIS 卸载项 + InstallLocation 与当前 exe 目录比对）
+winreg = "0.52"
+
 [target.'cfg(target_os = "linux")'.dependencies]
 webkit2gtk = "2"
 

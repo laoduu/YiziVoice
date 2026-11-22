@@ -12,6 +12,8 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+            // 在线更新：pubkey/endpoints 在 tauri.conf.json plugins.updater
+            .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let handle = app.handle().clone();
@@ -70,6 +72,9 @@ pub fn run() {
             cmds::export::export_binary_file,
             cmds::export::export_history_audio,
             cmds::export::history_read_audio,
+            cmds::update::get_install_kind,
+            cmds::update::check_manual_update,
+            cmds::update::get_app_version,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

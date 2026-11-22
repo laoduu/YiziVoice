@@ -1,0 +1,23 @@
+// en catalog fragment: update
+export const update: Record<string, string> = {
+  'update.section': 'Online update',
+  'update.current': 'Current version v{version}',
+  'update.check': 'Check for updates',
+  'update.checking': 'Checking…',
+  'update.latest': 'You are up to date',
+  'update.found': 'New version v{version} available',
+  'update.install': 'Update now',
+  'update.downloading': 'Downloading {percent}%',
+  'update.installing': 'Installing — the app will restart…',
+  'update.openPage': 'Open download page',
+  'update.skip': 'Skip this version',
+  'update.skipped': 'Skipped v{version}',
+  'update.checkFailed': 'Update check failed',
+  'update.installFailed': 'Update failed',
+  'update.retry': 'Retry',
+  'update.devHint': 'Update checks are disabled in dev mode',
+  'update.notTauriHint': 'Online update is only available in the desktop app',
+  'update.manualHint': 'Auto-install is not available here; download the new version manually',
+  'update.availableToast': 'New version v{version} available — see the About page',
+  'update.notes': 'Release notes',
+}

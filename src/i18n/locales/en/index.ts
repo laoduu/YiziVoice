@@ -13,6 +13,7 @@ import { history } from './history'
 import { ui } from './ui'
 import { errors } from './errors'
 import { services } from './services'
+import { update } from './update'
 
 export const en: Record<string, string> = {
   ...common,
@@ -26,4 +27,5 @@ export const en: Record<string, string> = {
   ...ui,
   ...errors,
   ...services,
+  ...update,
 }

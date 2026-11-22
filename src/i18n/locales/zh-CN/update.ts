@@ -1,0 +1,23 @@
+// zh-CN catalog fragment: update
+export const update = {
+  'update.section': '在线更新',
+  'update.current': '当前版本 v{version}',
+  'update.check': '检查更新',
+  'update.checking': '检查中…',
+  'update.latest': '已是最新版本',
+  'update.found': '发现新版本 v{version}',
+  'update.install': '立即更新',
+  'update.downloading': '下载中 {percent}%',
+  'update.installing': '安装中，应用将自动重启…',
+  'update.openPage': '打开下载页',
+  'update.skip': '跳过此版本',
+  'update.skipped': '已跳过 v{version}',
+  'update.checkFailed': '检查更新失败',
+  'update.installFailed': '更新失败',
+  'update.retry': '重试',
+  'update.devHint': '开发模式下不检查更新',
+  'update.notTauriHint': '仅桌面应用支持在线更新',
+  'update.manualHint': '当前环境不支持自动安装，请前往下载页手动更新',
+  'update.availableToast': '发现新版本 v{version}，可在「关于」页更新',
+  'update.notes': '更新说明',
+} as const

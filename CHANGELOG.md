@@ -7,6 +7,18 @@
 
 ## [2.1.4] - 开发中
 
+### 新增:新版本检测与 Windows 在线升级
+
+- 接入 `tauri-plugin-updater`：Windows NSIS 安装版支持**一键在线升级**（passive 静默安装，
+  装完自动重启）；macOS / Linux / 便携版走手动通道——检测到新版本后跳转对应 Release 页下载。
+- **关于页新增「在线更新」区**：当前版本、检查更新、下载进度条、跳过此版本；
+  启动 4 秒后静默检查一次，发现新版 toast 提示一次（失败与「已是最新」不出声）。
+- 新增 `scripts/check-updater.mjs`（发版门禁：pubkey/endpoints/installMode）与
+  `scripts/make-manifest.mjs`（生成 latest.json 清单）；release.yml Windows 腿注入
+  `TAURI_SIGNING_PRIVATE_KEY` 并在产物上传后自动发布清单。
+- 签名密钥对由 `npx tauri signer generate` 生成：公钥在 `tauri.conf.json plugins.updater`，
+  **私钥须存入 GitHub Secrets（TAURI_SIGNING_PRIVATE_KEY），勿提交仓库**。
+
 ### 新增:界面多语言（自建 i18n，中英双语）
 
 - 新增 `src/i18n/` 轻量本地化层（无第三方依赖）：`core.ts`（翻译/持久化）+ `react.tsx`

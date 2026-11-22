@@ -36,6 +36,14 @@ export async function installTauriBridge(): Promise<void> {
   ;(window as any).desktopAPI = {
     platform: detectPlatform(),
 
+    // —— 在线更新 ——
+    updater: {
+      getInstallKind: () => invoke<string>('get_install_kind'),
+      checkManual: () =>
+        invoke<{ success: boolean; data?: unknown; message?: string }>('check_manual_update'),
+      getAppVersion: () => invoke<string>('get_app_version'),
+    },
+
     // —— 窗口控制 ——
     minimize: () => win.minimize(),
     maximize: async () => {

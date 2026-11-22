@@ -75,5 +75,16 @@
         "postInstallScript": "deb/postinst"
       }
     }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDEwRDk3NjkwN0Y0MUE2MTAKUldRUXBrRi9rSGJaRUEveUc4VW44R01MekVxZVMrZGJQMGVCd1BDdkMyNkZ3S2dodzdGcWVOZjIK",
+      "endpoints": [
+        "https://github.com/laoduu/YiziVoice/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

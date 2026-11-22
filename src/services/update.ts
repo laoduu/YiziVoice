@@ -8,7 +8,7 @@
  * 这里只回答「要不要把这个版本给用户看」「进度条画到哪儿」。
  */
 
-/** 去掉前导 v 与首尾空白：清单里允许写 "v2.1.5"，本地版本不带 v。 */
+/** 去掉前导 v 与首尾空白：清单里允许写带 v 前缀的版本号，本地版本不带 v。 */
 export const normalizeVersion = (v: string): string =>
   String(v ?? '').trim().replace(/^v/i, '')
 

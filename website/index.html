@@ -327,29 +327,6 @@
     .cta p { margin: 14px auto 0; font-size: 1.05rem; color: rgba(255,255,255,0.85); max-width: 480px; position: relative; }
     .cta .btn { position: relative; margin-top: 30px; background: #fff; color: var(--blue); }
     .cta .btn:hover { background: #f0f4ff; color: var(--blue); }
-    .cta .cta-code {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      width: max-content; margin: 22px auto 0;
-      padding: 8px 8px 8px 16px; border-radius: 999px;
-      background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.4);
-      cursor: pointer; user-select: none;
-      transition: background .2s, transform .2s, border-color .2s, box-shadow .2s;
-    }
-    .cta .cta-code:hover { background: rgba(255,255,255,0.24); transform: translateY(-1px); border-color: rgba(255,255,255,0.65); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
-    .cta .cta-code:active { transform: scale(.97); }
-    .cta .cta-code-label { font-size: .84rem; color: rgba(255,255,255,0.82); }
-    .cta .cta-code-value {
-      font-weight: 800; font-size: 1.05rem; letter-spacing: .14em; color: #fff;
-      padding: 3px 14px; border-radius: 999px; background: rgba(0,0,0,0.22);
-    }
-    .cta .cta-code-copy {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 6px 16px; border-radius: 999px; font-size: .84rem; font-weight: 700;
-      background: var(--orange); color: #fff; white-space: nowrap;
-      transition: background .2s, transform .2s, box-shadow .2s;
-    }
-    .cta .cta-code-copy:hover { background: var(--orange-deep); box-shadow: 0 6px 16px rgba(243,112,33,0.4); }
-    .cta .cta-code-copy:active { transform: scale(.96); }
 
     /* CTA download card (sources side by side) */
     .cta-card {
@@ -372,28 +349,6 @@
     .cta-card .btn { margin: 0; background: #fff; color: var(--blue); white-space: nowrap; }
     .cta-card .btn:hover { background: #f0f4ff; color: var(--blue); }
     .cta-card .cta-platform { margin: -6px 0 0; font-size: .8rem; color: rgba(255,255,255,0.75); }
-    .cta-card .cta-code { margin: 0; height: 42px; }
-    /* GitHub 通道:平台直链行 —— 三列等宽,高度与网盘提取码行同档,保证三卡逐行对齐 */
-    /* 平台直链行:单行胶囊 + 三列等宽,高 42px 与提取码行同档 → 三卡逐行齐 */
-    .gh-btns { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; height: 42px; }
-    .gh-btn {
-      display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-      height: 42px; padding: 0 10px; border-radius: 999px;
-      font-size: .8rem; font-weight: 600;
-      background: rgba(255,255,255,0.92); color: var(--blue); text-decoration: none;
-      border: 1px solid rgba(255,255,255,0.5); white-space: nowrap; overflow: hidden;
-      transition: background .18s, transform .18s, box-shadow .18s;
-    }
-    .gh-btn:hover { background: #fff; transform: translateY(-1px); box-shadow: 0 8px 18px rgba(0,0,0,0.18); }
-    .gh-btn:active { transform: scale(.97); }
-    .gh-btn .gh-size { font-size: .68rem; font-weight: 500; opacity: .6; }
-    .gh-fallback {
-      display: none; width: 100%; height: 42px; margin: 0;
-      font-size: .78rem; color: rgba(255,255,255,0.8);
-      line-height: 42px;
-      text-align: center;
-    }
-    .gh-fallback a { color: #fff; text-decoration: underline; text-underline-offset: 3px; }
 
     /* Footer */
     .footer { padding: 40px 0 48px; border-top: 1px solid var(--line); }
@@ -728,7 +683,8 @@
       </div>
       <div class="changelog" data-reveal>
         <div class="cl-tabs" id="clTabs">
-          <button class="cl-tab active" data-ver="v2.1.3" type="button">v2.1.3</button>
+          <button class="cl-tab active" data-ver="v2.1.4" type="button">v2.1.4</button>
+          <button class="cl-tab" data-ver="v2.1.3" type="button">v2.1.3</button>
           <button class="cl-tab" data-ver="v2.1.2" type="button">v2.1.2</button>
           <button class="cl-tab" data-ver="v2.1.1" type="button">v2.1.1</button>
           <button class="cl-tab" data-ver="v2.0.4" type="button">v2.0.4</button>
@@ -752,7 +708,7 @@
       </div>
       <div class="faq">
         <div class="faq-item" data-reveal><h3>YiziVoice 免费吗？</h3><p>工具本身完全免费，仅需在设置中填入自己的 MiMo API Key。MiMo-TTS 系列语音生成模型免费调用；MiMo-ASR 语音转文字模型与 MiMo-2.6 系列文本模型为付费模型，使用时需账户有余额。注册时填写邀请码，可额外获得 10 元体验金。</p></div>
-        <div class="faq-item" data-reveal><h3>支持哪些平台？</h3><p>提供 Windows、macOS 与 Linux（AMD64）桌面应用，推荐从 <a href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">GitHub Releases</a> 下载；页面底部另有网盘国内镜像。macOS 为未签名的 universal DMG，首次打开若被 Gatekeeper 拦截，右键选择「打开」或执行 <code>xattr -cr /Applications/YiziVoice.app</code> 即可。Linux 提供 deb 与 AppImage：deb 为推荐方式，<code>sudo dpkg -i YiziVoice_&lt;版本&gt;_amd64.deb</code>（或 <code>sudo apt install ./YiziVoice_&lt;版本&gt;_amd64.deb</code> 自动补依赖）；AppImage 下载后 <code>chmod +x</code> 即可运行，属实验性格式。</p></div>
+        <div class="faq-item" data-reveal><h3>支持哪些平台？</h3><p>提供 Windows、macOS 与 Linux（AMD64）桌面应用，请从 <a href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">GitHub Releases</a> 下载，三个平台同一入口。macOS 为未签名的 universal DMG，首次打开若被 Gatekeeper 拦截，右键选择「打开」或执行 <code>xattr -cr /Applications/YiziVoice.app</code> 即可。Linux 提供 deb 与 AppImage：deb 为推荐方式，<code>sudo dpkg -i YiziVoice_&lt;版本&gt;_amd64.deb</code>（或 <code>sudo apt install ./YiziVoice_&lt;版本&gt;_amd64.deb</code> 自动补依赖）；AppImage 下载后 <code>chmod +x</code> 即可运行，属实验性格式。</p></div>
         <div class="faq-item" data-reveal><h3>克隆音色需要多长时间？</h3><p>录音 20 秒内的样本提交后，数秒即可完成复刻并生成预览，保存后即可在文生音中使用。</p></div>
         <div class="faq-item" data-reveal><h3>我的数据安全吗？</h3><p>音色、风格、历史记录等项目数据只保存在你的本地文档目录，不上传到 YiziVoice 自有服务器。调用 MiMo API 生成/识别时，文本或音频样本会发送给小米 MiMo 用于处理；API Key 存放在系统钥匙串，不写入任何文件。</p></div>
         <div class="faq-item" data-reveal><h3>升级后 API Key 为什么需要重填？</h3><p>v2.0.1 起 API Key 不再以明文保存在本地文件，而是加密存入系统钥匙串：Windows 使用凭据管理器（DPAPI），macOS 使用 Keychain，Linux 使用 Secret Service（gnome-keyring / KWallet）。即使数据目录被整个拷走或上传网盘，也拿不到你的密钥。v2.1.3 起设置页只写不回显，保存后只显示「已配置」，可输入新 Key 替换或点「清除」删除。大多数情况下<b>无需重填</b>：旧版本 Key 会在首次启动时自动迁移；仅当从很老的版本跨级升级时需要重新输入一次。</p></div>
@@ -767,59 +723,13 @@
       <div class="cta" data-reveal>
         <h2>准备好让你的角色开口了吗？</h2>
         <p>下载 YiziVoice，立即开始语音克隆与文生音创作。</p>
-        <div class="cta-card">
+        <div class="cta-card cta-card-single">
           <div class="cta-source">
             <a class="btn" href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56 0-.27-.01-1.17-.02-2.12-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.72-1.54-2.55-.29-5.24-1.28-5.24-5.68 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .96-.31 3.15 1.18a10.9 10.9 0 0 1 2.87-.39c.97 0 1.95.13 2.87.39 2.18-1.49 3.14-1.18 3.14-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.26 5.67.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.2.67.8.56A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
               GitHub 下载
             </a>
-            <p class="cta-platform">Windows / macOS / Linux 版（推荐）</p>
-            <div class="gh-btns" id="gh-btns">
-              <a class="gh-btn" data-os="win" href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10 4.5v7H3zM11 4.3 21 3v8.5H11zM3 12.5h7v7L3 18.5zM11 12.5h10V21l-10-1.3z"/></svg>
-                Windows<span class="gh-size">exe</span>
-              </a>
-              <a class="gh-btn" data-os="mac" href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M16.4 12.9c0-2.3 1.9-3.4 2-3.5-1.1-1.6-2.8-1.8-3.4-1.9-1.4-.2-2.8.8-3.5.8-.7 0-1.9-.8-3.1-.8-1.6 0-3 .9-3.8 2.3-1.6 2.8-.4 7 1.2 9.3.8 1.1 1.7 2.4 2.9 2.3 1.2 0 1.6-.7 3-.7s1.8.7 3 .7c1.3 0 2.1-1.1 2.9-2.2.9-1.3 1.3-2.5 1.3-2.6-.1 0-2.5-1-2.5-3.7zM14.2 5.9c.6-.8 1.1-1.9 1-3-1 0-2.2.6-2.8 1.5-.6.7-1.2 1.9-1 3 1.1.1 2.2-.6 2.8-1.5z"/></svg>
-                macOS<span class="gh-size">dmg</span>
-              </a>
-              <a class="gh-btn" data-os="linux" href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-2 0-3 1.6-3 3.5 0 1.4.2 2.3-.4 3.5-.7 1.3-2.3 3.3-2.6 5.5-.2 1.4.1 2.6.8 3.3-.3.7-.3 1.5 0 2.2.4.9 1.2 1.5 2 1.5.6 0 1.1-.2 1.5-.6.7.3 1.4.4 2 .4s1.3-.1 2-.4c.4.4.9.6 1.5.6.8 0 1.6-.6 2-1.5.3-.7.3-1.5 0-2.2.7-.7 1-1.9.8-3.3-.3-2.2-1.9-4.2-2.6-5.5-.6-1.2-.4-2.1-.4-3.5C15 3.6 14 2 12 2z"/></svg>
-                Linux<span class="gh-size">deb</span>
-              </a>
-            </div>
-            <p class="gh-fallback" id="gh-fallback">直链暂不可用时，请前往
-              <a href="https://github.com/laoduu/YiziVoice/releases/latest" target="_blank" rel="noopener">Releases 页</a>手动下载。</p>
-          </div>
-          <div class="cta-source">
-            <a class="btn" href="https://pan.baidu.com/s/17v_sHe6_dAXytbnRoDSmfg?pwd=c4gs" target="_blank" rel="noopener">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              百度网盘下载
-            </a>
-            <p class="cta-platform">Windows / macOS / Linux 版 · 国内镜像</p>
-            <div class="cta-code" data-code="c4gs" onclick="copyCode(this)" role="button" tabindex="0" aria-label="复制提取码 c4gs" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyCode(this);}">
-              <span class="cta-code-label">提取码</span>
-              <span class="cta-code-value">c4gs</span>
-              <span class="cta-code-copy">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                复制
-              </span>
-            </div>
-          </div>
-          <div class="cta-source">
-            <a class="btn" href="https://pan.quark.cn/s/bcbea60bcaa5" target="_blank" rel="noopener">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              夸克网盘下载
-            </a>
-            <p class="cta-platform">Windows / macOS / Linux 版 · 国内镜像</p>
-            <div class="cta-code" data-code="RK1j" onclick="copyCode(this)" role="button" tabindex="0" aria-label="复制提取码 RK1j" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();copyCode(this);}">
-              <span class="cta-code-label">提取码</span>
-              <span class="cta-code-value">RK1j</span>
-              <span class="cta-code-copy">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                复制
-              </span>
-            </div>
+            <p class="cta-platform">Windows · macOS · Linux —— 三个平台同一入口，在 Releases 页按需选择安装包</p>
           </div>
         </div>
       </div>
@@ -889,73 +799,7 @@
       buildWave('fwave-asr', 14, 4, 24, '#12899b', '#0ea5e9', 40, 28);
     })();
 
-    // GitHub 下载通道：解析 latest release 的资产直链（失败静默回退到 Releases 页）
-    (function () {
-      var REPO = 'laoduu/YiziVoice';
-      var PATTERNS = {
-        win: /_x64-setup\.exe$/i,
-        mac: /_universal\.dmg$/i,
-        linux: /_amd64\.deb$/i
-      };
-      var btns = document.querySelectorAll('#gh-btns .gh-btn');
-      if (!btns.length || typeof fetch !== 'function') return;
-      fetch('https://api.github.com/repos/' + REPO + '/releases/latest', { headers: { Accept: 'application/vnd.github+json' } })
-        .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.json(); })
-        .then(function (rel) {
-          var assets = rel.assets || [];
-          var matched = 0;
-          btns.forEach(function (btn) {
-            var os = btn.getAttribute('data-os');
-            var re = PATTERNS[os];
-            if (!re) return;
-            var asset = null;
-            for (var i = 0; i < assets.length; i++) {
-              if (re.test(assets[i].name)) { asset = assets[i]; break; }
-            }
-            if (asset) {
-              btn.href = asset.browser_download_url;
-              matched++;
-              var sizeEl = btn.querySelector('.gh-size');
-              if (sizeEl && asset.size) {
-                var mb = asset.size / 1048576;
-                sizeEl.textContent = (mb >= 10 ? mb.toFixed(0) : mb.toFixed(1)) + ' MB';
-              }
-            }
-          });
-          // 三个平台都解析不到 → 显示回退提示
-          if (matched === 0) {
-            var fb = document.getElementById('gh-fallback');
-            if (fb) fb.style.display = 'block';
-          }
-        })
-        .catch(function () {
-          var fb = document.getElementById('gh-fallback');
-          if (fb) fb.style.display = 'block';
-        });
-    })();
 
-    function copyCode(el) {
-      var code = el.getAttribute && el.getAttribute('data-code') || 'RK1j';
-      var label = el.querySelector && el.querySelector('.cta-code-copy');
-      if (!label) label = el;
-      var done = function () {
-        var old = label.textContent;
-        label.textContent = '已复制';
-        setTimeout(function () { label.textContent = old; }, 2400);
-      };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(code).then(done).catch(function () { fallbackCopy(code, el, done); });
-      } else {
-        fallbackCopy(code, el, done);
-      }
-    }
-    function fallbackCopy(text, btn, done) {
-      var ta = document.createElement('textarea');
-      ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-      document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); done(); } catch (e) {}
-      document.body.removeChild(ta);
-    }
 
     function toggleLingPlay(btn) {
       var audio = document.getElementById('lingAudio');
@@ -978,7 +822,14 @@
     // Changelog version tabs
     (function () {
       var CL_DATA = [
-        { ver: 'v2.1.3', date: '2026-11-14', latest: true, items: [
+        { ver: 'v2.1.4', date: '2026-11-22', latest: true, items: [
+          { t: 'add', txt: '界面多语言：新增自建 i18n，支持简体中文 / English 即时切换（设置页顶部「界面语言」），全应用按钮、提示、教程、关于页同步翻译' },
+          { t: 'fix', txt: '修复 Linux 从历史记录还原任务后，点播放提示「音频播放失败，请尝试下载后播放」（历史回放 blob URL 被提前释放）' },
+          { t: 'opt', txt: 'README 全面重写（中英双语）：新增品牌色 SVG 架构动图与真实界面截图，章节重排为产品门面结构' },
+          { t: 'add', txt: '官网下载区改为 GitHub Releases 单一入口，Windows / macOS / Linux 三平台同一链接' },
+          { t: 'add', txt: '开源就绪：MIT 许可证、贡献指南、安全策略、第三方声明与开发文档体系（docs/）' }
+        ]},
+        { ver: 'v2.1.3', date: '2026-11-14', latest: false, items: [
           { t: 'add', txt: 'API Key 改为只写式：保存后加密存入系统钥匙串，设置页不再回显；输入框内提供「验证」与「保存」，保存后只显示「已配置」' },
           { t: 'add', txt: '新增可配置 AI 文本模型：默认 mimo-v2.6-flash，可获取当前 Key 可用的模型并选择；AI 生成风格描述 / 音色描述不再依赖已下线的 mimo-v2.5' },
           { t: 'add', txt: '音色克隆新增第三入口「设计音色」：用文字描述年龄、音色、语速、情绪与场景生成样本；可用 AI 一次生成音色描述与试听文本' },
